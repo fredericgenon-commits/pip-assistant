@@ -3,10 +3,21 @@
 ## Prompt
 
 « Pour le prochain développement, on va créer le premier écran : une page qui affiche les
-PIPs (titre "PIPs"). Le nom d'un PIP est `yy_PIP_n` (ex. `26_PIP_1`). Écran : filtre
-"Année", bouton "Refresh", bouton "New", liste des PIPs. Bouton New : fenêtre avec un
-champ "PIP name" éditable, initialisé en partant du PIP maximum (`26_PIP_4` → `26_PIP_5`,
-ou `yy_PIP_` si vide), boutons "Save" / "Cancel". » — revue puis cadrage via `/interview`.
+PIPs (titre "PIPs"). 
+Le nom d'un PIP est `yy_PIP_n` (ex. `26_PIP_1`). 
+
+Écran : 
+- filtre "Année"
+- bouton "Refresh"
+- bouton "New"
+- liste des PIPs. 
+
+Bouton New : 
+- fenêtre avec un champ "PIP name" éditable, initialisé en partant du PIP maximum (`26_PIP_4` → `26_PIP_5`,
+ou `yy_PIP_` si vide)
+- boutons "Save" / "Cancel". » 
+
+— revue puis cadrage via `/interview`.
 
 ### Decisions locked in the interview
 - **next-code**: greatest existing code, increment only `n`; year not auto-incremented;
