@@ -1,0 +1,22 @@
+<h2 mat-dialog-title>New PIP</h2>
+
+<mat-dialog-content>
+  <mat-form-field class="w-full">
+    <mat-label>PIP name</mat-label>
+    <input matInput [formControl]="code" placeholder="yy_PIP_n" autocomplete="off" />
+    @if (code.hasError('required')) {
+      <mat-error>PIP name is required.</mat-error>
+    } @else if (code.hasError('pattern')) {
+      <mat-error>Format must be yy_PIP_n (e.g. 26_PIP_1).</mat-error>
+    }
+  </mat-form-field>
+
+  @if (serverError()) {
+    <p class="text-red-600 mt-1">{{ serverError() }}</p>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancel</button>
+  <button mat-flat-button color="primary" [disabled]="saving()" (click)="save()">Save</button>
+</mat-dialog-actions>

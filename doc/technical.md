@@ -113,9 +113,81 @@ then use the shared run configs (`Backend (Spring Boot)`, `Frontend (npm start)`
 CORS: the backend allows `http://localhost:4200` (`WebCorsConfig`) for direct calls;
 the dev proxy is the primary mechanism during development.
 
+## PIP vertical slice (reference pattern)
+
+The first business feature (`Pip`) establishes the hexagonal pattern reused by future
+entities.
+
+```mermaid
+flowchart TB
+    subgraph infrastructure.web
+        C["PipController + DTOs<br/>PipExceptionHandler"]
+    end
+    subgraph application
+        S["PipService (+ Clock)<br/>list / years / next-code / create"]
+    end
+    subgraph domain
+        M["Pip, PipStatus<br/>PipCode (value object)"]
+        P["PipRepository (port)"]
+    end
+    subgraph infrastructure.persistence
+        A["PipRepositoryAdapter"]
+        E["PipEntity + PipJpaRepository"]
+    end
+    C --> S --> P
+    S --> M
+    A -.implements.-> P
+    A --> E
+```
+
+- **`PipCode`** (domain value object) centralizes the naming rules: validation of
+  `yy_PIP_n`, parsing of year/sequence, ordering, and next-code computation.
+- **`PipService`** depends only on the `PipRepository` port and an injected `Clock`
+  (testable time). `PipRepositoryAdapter` maps the port onto Spring Data JPA.
+- Errors: `DuplicatePipCodeException` → 409, invalid code (`IllegalArgumentException`
+  from `PipCode`) → 400, via `PipExceptionHandler`.
+- Schema: Flyway `V2__create_pip.sql` (table `pip`, unique `code`).
+
+### Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/pips?year={yy}` | List PIPs (desc), optional 2-digit year filter |
+| GET | `/api/pips/years` | Distinct 2-digit years present |
+| GET | `/api/pips/next-code` | Suggested code for a new PIP |
+| POST | `/api/pips` | Create a PIP (`{ "code": "26_PIP_1" }`) → 201 / 400 / 409 |
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant D as New PIP dialog
+    participant C as PipController
+    participant S as PipService
+    U->>D: click "New"
+    D->>C: GET /api/pips/next-code
+    C->>S: suggestNextCode()
+    S-->>D: 26_PIP_5 (prefilled, editable)
+    U->>D: Save
+    D->>C: POST /api/pips {code}
+    C->>S: create(code)
+    alt valid & unique
+        S-->>D: 201 PipResponse → close + refresh
+    else duplicate / invalid
+        S-->>D: 409 / 400 → field error
+    end
+```
+
+### Frontend structure
+
+`src/app/app.ts` is a shell (`mat-toolbar` + `<router-outlet>`); routes: `'' → pips`,
+`pips` → `PipList`, `pips/:id` → `PipDetail` (stub). Feature code lives under
+`src/app/pips/` (`pip.model.ts`, `pip.service.ts`, `pip-list/`, `pip-new-dialog/`,
+`pip-detail/`).
+
 ## Planned (later phases)
 
 - Spring Security + JWT, CORS hardening.
-- Domain model + Flyway migrations (`V2__*`, ...) and full CRUD REST API + OpenAPI.
+- Remaining domain entities + Flyway migrations (`V3__*`, ...), PIP detail screen,
+  OpenAPI.
 - Integrations: GitLab REST API v4, JIRA REST API, XLDeploy REST API.
 - Excel import & change tracking.

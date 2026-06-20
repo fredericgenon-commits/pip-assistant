@@ -1,35 +1,11 @@
-import { Component, inject, signal } from '@angular/core';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-
-import { HealthService } from './health.service';
-
-type BackendState = 'loading' | 'up' | 'down';
+import { Component } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
+import { MatToolbarModule } from '@angular/material/toolbar';
 
 @Component({
   selector: 'app-root',
-  imports: [MatCardModule, MatIconModule, MatProgressSpinnerModule],
+  imports: [RouterOutlet, MatToolbarModule],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
-export class App {
-  protected readonly title = signal('PIP Assistant');
-  protected readonly backendState = signal<BackendState>('loading');
-  protected readonly backendStatus = signal<string>('');
-
-  private readonly healthService = inject(HealthService);
-
-  constructor() {
-    this.healthService.getHealth().subscribe({
-      next: (response) => {
-        this.backendStatus.set(response.status);
-        this.backendState.set(response.status === 'UP' ? 'up' : 'down');
-      },
-      error: () => {
-        this.backendStatus.set('unreachable');
-        this.backendState.set('down');
-      }
-    });
-  }
-}
+export class App {}

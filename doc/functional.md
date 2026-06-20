@@ -168,4 +168,36 @@ flowchart LR
 
 ## Features
 
-To be defined in later phases (Phase 1 delivers only the technical scaffold).
+### PIP list (`/pips`)
+
+The first screen lists PIPs and lets the user create one.
+
+- **Title**: "PIPs".
+- **Year filter** (`mat-select`): the distinct 2-digit years present, plus **All**
+  (default). Pressing **Refresh** reloads the list for the selected year.
+- **New**: opens a dialog with an editable **PIP name** field, prefilled with the
+  suggested next code, plus **Save** / **Cancel**.
+- **List**: a table with **PIP name** and **Status** (badge), sorted descending; clicking
+  a row opens the PIP detail page (placeholder for now).
+
+**Naming rule** — a PIP name is `yy_PIP_n` (2-digit year, then a sequence number), e.g.
+`26_PIP_1`. The number is compared numerically (`26_PIP_10` > `26_PIP_9`).
+
+**Next-code suggestion** — the greatest existing code with its sequence incremented
+(`26_PIP_4` → `26_PIP_5`); the year is **not** changed automatically (edit it by hand when
+a new year starts). With no PIP yet, the suggestion is `<current year>_PIP_1`.
+
+**Status lifecycle** — `PREPARATION` (default at creation) → `ACTIVE` → `CLOSED`. Status
+and dates are not editable on this screen yet.
+
+```mermaid
+flowchart LR
+    L["PIPs list"] -->|Refresh| L
+    L -->|New| D["New PIP dialog<br/>(prefilled next code)"]
+    D -->|Save → 201| L
+    D -->|Cancel| L
+    L -->|click row| Det["PIP detail (stub)"]
+```
+
+Validation: an invalid format is rejected (400) and a duplicate name is rejected (409),
+both surfaced as errors in the dialog.
