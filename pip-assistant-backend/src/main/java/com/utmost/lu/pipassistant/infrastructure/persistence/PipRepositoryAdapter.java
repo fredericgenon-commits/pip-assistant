@@ -46,6 +46,11 @@ public class PipRepositoryAdapter implements PipRepository {
     }
 
     @Override
+    public Optional<Pip> findById(Long id) {
+        return jpaRepository.findById(id).map(this::toDomain);
+    }
+
+    @Override
     public Pip save(Pip pip) {
         PipEntity saved = jpaRepository.save(toEntity(pip));
         return toDomain(saved);

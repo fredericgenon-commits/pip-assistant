@@ -22,5 +22,7 @@ public interface PipRepository {
     /** The greatest PIP overall (by year then sequence), if any. */
     Optional<Pip> findMax();
 
+    Optional<Pip> findById(Long id);
+
     Pip save(Pip pip);
 }

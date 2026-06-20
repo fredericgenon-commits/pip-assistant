@@ -177,8 +177,8 @@ The first screen lists PIPs and lets the user create one.
   (default). Pressing **Refresh** reloads the list for the selected year.
 - **New**: opens a dialog with an editable **PIP name** field, prefilled with the
   suggested next code, plus **Save** / **Cancel**.
-- **List**: a table with **PIP name** and **Status** (badge), sorted descending; clicking
-  a row opens the PIP detail page (placeholder for now).
+- **List**: a table with **PIP name** and **Status** (badge), sorted descending;
+  **double-clicking** a row opens the PIP Details page.
 
 **Naming rule** — a PIP name is `yy_PIP_n` (2-digit year, then a sequence number), e.g.
 `26_PIP_1`. The number is compared numerically (`26_PIP_10` > `26_PIP_9`).
@@ -196,8 +196,37 @@ flowchart LR
     L -->|New| D["New PIP dialog<br/>(prefilled next code)"]
     D -->|Save → 201| L
     D -->|Cancel| L
-    L -->|click row| Det["PIP detail (stub)"]
+    L -->|double-click row| Det["PIP Details"]
 ```
 
 Validation: an invalid format is rejected (400) and a duplicate name is rejected (409),
 both surfaced as errors in the dialog.
+
+### PIP Details (`/pips/:id`)
+
+Opened by double-clicking a PIP. Title "PIP Details". Shows the PIP **name** and
+**status** (read-only) and a worksheet of the PIP's requirements.
+
+- **Requirements table** — one row per requirement, columns: **TCM**, **TCM description**,
+  **REQ**, **REQ description**, **REQ status**, **PM comment**, **Dev comment**, and one
+  story-points column per team (**Core, Portal, Process, Assets, API, Document**). Every
+  column is **sortable**. All cells are editable **except TCM and REQ** (read-only keys).
+- **Team selector** — chooses which team's note is shown/edited in the **Dev comment**
+  column (each requirement keeps a comment per team).
+- **Footer rows** — **Total** = live sum of each team's story points over the
+  requirements; **Capacity** = each team's editable capacity for the PIP.
+- **Save** — a single button persists all edits at once (requirement fields, dev comments,
+  workloads, capacities). Requirement statuses are validated against a **configurable list**
+  (`application.yml`, default `TODO / IN_PROGRESS / DONE`); an unknown status is rejected (400).
+
+Requirements are **not created here** — they will come from the future Excel/JIRA import,
+so the table is empty until then (a backend create endpoint exists for tests/import).
+
+```mermaid
+flowchart LR
+    G["Requirements grid<br/>(editable, sortable)"] -->|edit cells| G
+    Team["Team select"] -->|drives| DC["Dev comment column"]
+    G --> Tot["Total per team (computed)"]
+    Cap["Capacity per team (editable)"]
+    G -->|Save → 204| G
+```

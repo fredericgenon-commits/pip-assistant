@@ -99,7 +99,12 @@ next number. Keep this history up to date as part of finishing a task.
 
 - Phase 1 (scaffold / hello world): complete — hexagonal structure + `/api/health`,
   Corretto 21, on GitHub.
-- First feature — **PIP list** (`/pips`): complete. `Pip` entity end-to-end (domain
-  `PipCode` value object, port + adapter, `PipService`, REST `/api/pips`, Flyway `V2`),
-  Angular router shell + list/new-dialog/detail-stub. The PIP detail screen, status/date
-  editing, and the other entities are future work.
+- **PIP list** (`/pips`): complete. `Pip` entity end-to-end (domain `PipCode` value
+  object, port + adapter, `PipService`, REST `/api/pips`, Flyway `V2`), Angular router
+  shell + list/new-dialog.
+- **PIP Details** (`/pips/:id`): complete. Domain `Team`/`Project`/`Requirement`/
+  `Workload`/`DevComment`/`PipCapacity` (Flyway `V3`, seeds 6 teams), aggregated
+  `GET/PUT /api/pips/{id}/detail`, configurable requirement statuses
+  (`pip.requirement.statuses`). Editable worksheet (sortable grid, Total/Capacity footers,
+  bulk Save). Requirements are not created in the UI yet — they await the Excel/JIRA import.
+  Future: status/date editing, the import, and the integrations.

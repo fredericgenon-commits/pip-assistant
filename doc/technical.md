@@ -180,14 +180,65 @@ sequenceDiagram
 ### Frontend structure
 
 `src/app/app.ts` is a shell (`mat-toolbar` + `<router-outlet>`); routes: `'' → pips`,
-`pips` → `PipList`, `pips/:id` → `PipDetail` (stub). Feature code lives under
-`src/app/pips/` (`pip.model.ts`, `pip.service.ts`, `pip-list/`, `pip-new-dialog/`,
-`pip-detail/`).
+`pips` → `PipList`, `pips/:id` → `PipDetail`. Feature code lives under `src/app/pips/`
+(`pip.model.ts`, `pip.service.ts`, `pip-list/`, `pip-new-dialog/`, `pip-detail/`).
+
+## PIP Details slice
+
+Adds most of the domain (`Team`, `Project`, `Requirement`, `Workload`, `DevComment`,
+`PipCapacity`) with an aggregated read and a single bulk save (`V3__create_pip_detail.sql`,
+which also seeds the 6 teams).
+
+- **Domain**: plain records + coarse ports `PipDetailRepository` (projects/requirements/
+  workloads/dev-comments/capacities + upserts + interim `createRequirement`) and
+  `TeamRepository`. Allowed requirement statuses come from `RequirementStatusCatalog`
+  (application port) implemented by `RequirementStatusProperties`
+  (`@ConfigurationProperties("pip.requirement")`, see `application.yml`).
+- **Application**: `PipDetailService.getDetail` assembles `PipDetailView` (rows carry
+  workloads + dev comments **per team**); `save` validates statuses then upserts; 404
+  (`PipNotFoundException`) / 400 (`InvalidRequirementStatusException`).
+- **Infrastructure**: per-table JPA entities + Spring Data repos composed by
+  `PipDetailRepositoryAdapter`; `PipDetailController` + DTOs; `PipDetailExceptionHandler`.
+
+### Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/pips/{id}/detail` | Aggregated detail (pip, teams, requirement rows, capacities) |
+| PUT | `/api/pips/{id}/detail` | Bulk save (requirement edits + capacities) → 204 / 400 / 404 |
+| GET | `/api/requirement-statuses` | Configurable status list |
+| POST | `/api/pips/{id}/requirements` | Interim create (tests / future import; not in UI) |
+
+```mermaid
+flowchart TB
+    subgraph web
+        DC["PipDetailController<br/>+ PipDetailExceptionHandler"]
+    end
+    subgraph app["application"]
+        DS["PipDetailService"]
+        Cat["RequirementStatusCatalog"]
+    end
+    subgraph dom["domain"]
+        DP["PipDetailRepository / TeamRepository (ports)"]
+    end
+    subgraph infra["infrastructure"]
+        DA["PipDetailRepositoryAdapter<br/>(6 JPA repos)"]
+        Props["RequirementStatusProperties"]
+    end
+    DC --> DS --> DP
+    DS --> Cat
+    DA -. implements .-> DP
+    Props -. implements .-> Cat
+```
+
+The frontend `pip-detail/` component loads the aggregate, edits cells in place (plain
+inputs/select in a `mat-table` with `MatSort`; `Total`/`Capacity` as two `mat-footer-row`s),
+tracks a dirty flag and persists everything via one PUT.
 
 ## Planned (later phases)
 
 - Spring Security + JWT, CORS hardening.
-- Remaining domain entities + Flyway migrations (`V3__*`, ...), PIP detail screen,
-  OpenAPI.
+- PIP detail enhancements (add/remove requirements once the import exists), OpenAPI,
+  status-admin screen.
 - Integrations: GitLab REST API v4, JIRA REST API, XLDeploy REST API.
 - Excel import & change tracking.

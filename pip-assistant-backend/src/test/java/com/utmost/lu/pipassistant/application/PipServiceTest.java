@@ -88,6 +88,11 @@ class PipServiceTest {
         }
 
         @Override
+        public Optional<Pip> findById(Long id) {
+            return store.stream().filter(p -> p.id() != null && p.id().equals(id)).findFirst();
+        }
+
+        @Override
         public Pip save(Pip pip) {
             Pip persisted = new Pip(++sequence, pip.code(), pip.startDate(), pip.endDate(), pip.status());
             store.add(persisted);

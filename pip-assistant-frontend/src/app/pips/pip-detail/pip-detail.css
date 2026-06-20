@@ -1,0 +1,35 @@
+:host {
+  display: block;
+}
+
+.pip-grid {
+  width: 100%;
+  min-width: 1100px;
+}
+
+.pip-grid th,
+.pip-grid td {
+  padding: 4px 8px;
+  white-space: nowrap;
+}
+
+.cell-input {
+  width: 100%;
+  min-width: 90px;
+  border: 1px solid #cbd5e1; /* slate-300 */
+  border-radius: 4px;
+  padding: 2px 6px;
+  font: inherit;
+  background: #fff;
+}
+
+.cell-input.num {
+  width: 70px;
+  min-width: 70px;
+  text-align: right;
+}
+
+.cell-input:focus {
+  outline: none;
+  border-color: #6366f1; /* indigo-500 */
+}
