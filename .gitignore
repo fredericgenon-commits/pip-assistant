@@ -1,0 +1,56 @@
+# ===== Java / Maven (backend) =====
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+hs_err_pid*
+replay_pid*
+
+# ===== Node / Angular (frontend) =====
+node_modules/
+dist/
+.angular/
+/tmp/
+/out-tsc/
+/bazel-out/
+*.tsbuildinfo
+.npm
+npm-debug.log*
+yarn-error.log*
+
+# ===== Environment / secrets =====
+.env
+.env.*
+*.local
+application-local.yml
+application-local.properties
+
+# ===== IDE: IntelliJ IDEA =====
+# Ignore everything under .idea except the shared run configurations.
+.idea/*
+!.idea/runConfigurations/
+.idea/**/workspace.xml
+.idea/**/usage.statistics.xml
+.idea/**/shelf/
+*.iml
+*.ipr
+*.iws
+
+# ===== IDE: VS Code =====
+.vscode/*
+!.vscode/extensions.json
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== Test / coverage =====
+coverage/
+*.lcov
+/test-results/

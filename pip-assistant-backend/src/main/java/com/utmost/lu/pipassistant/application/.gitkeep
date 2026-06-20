@@ -1,0 +1,2 @@
+# Hexagonal architecture: application layer (use cases / application services orchestrating the domain).
+# Kept empty in Phase 1 (no use cases yet).

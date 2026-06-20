@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: pip-assistant-backend
+
+  # H2 in-memory database for development. To be migrated to MS SQL Server later;
+  # keep migrations and types portable (avoid H2-specific SQL).
+  datasource:
+    url: jdbc:h2:mem:pipassistant;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+
+  jpa:
+    # Flyway owns the schema; Hibernate must not generate or validate DDL.
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  # Flyway-managed migrations from the very first version.
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  # H2 web console disabled by default (no UI exposure).
+  h2:
+    console:
+      enabled: false
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

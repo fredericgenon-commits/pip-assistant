@@ -1,0 +1,2 @@
+# Hexagonal architecture: domain layer (entities, value objects, domain services, ports).
+# Kept empty in Phase 1 (no business model yet).

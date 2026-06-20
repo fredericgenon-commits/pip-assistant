@@ -1,0 +1,87 @@
+# CLAUDE.md — PIP Assistant
+
+Project guidance for Claude Code. Keep this file up to date as the project evolves.
+
+## What this project is
+
+PIP Assistant helps Scrum Masters prepare the backlog for the next **PIP**
+(a 7-week cycle: 6 weeks of development across 3 sprints + 1 preparation week).
+Project Managers send a regularly-updated Excel file listing the next PIP's projects
+(TCM, REQ, comment, and known workload per team: Core, Portal, Process, Assets, API,
+Document). The app will:
+
+- identify requirements and their development tickets in JIRA;
+- track successive updates of the Excel file;
+- manage comments and required actions per team and per REQ;
+- correlate data across JIRA, GitLab and XLDeploy.
+
+## Monorepo layout
+
+```
+pip-assistant/
+├─ pip-assistant-backend/    # Spring Boot 4 (Maven, Java 21), hexagonal architecture
+├─ pip-assistant-frontend/   # Angular 21 (Tailwind CSS + Angular Material)
+├─ doc/                      # functional + technical documentation (Markdown)
+└─ .idea/runConfigurations/  # shared IntelliJ run configs (versioned)
+```
+
+## Stack
+
+**Backend** — Spring Boot 4.1.0, Java 21 (built/tested locally with OpenJDK 22),
+Maven via the `mvnw` wrapper. Hexagonal architecture: `domain`, `application`,
+`infrastructure` under `com.utmost.lu.pipassistant`. Persistence: Spring Data JPA +
+H2 (dev), schema managed by **Flyway** (`src/main/resources/db/migration`); the target
+DB is MS SQL Server, so keep SQL portable. OpenAPI/Actuator available.
+Spring Security + JWT will be added in a later phase.
+
+**Frontend** — Angular 21 (standalone components, signals), Tailwind CSS 4 +
+Angular Material. Dev server proxies `/api/**` to the backend (`src/proxy.conf.json`).
+
+**Integrations (later phases)** — GitLab REST API v4, JIRA REST API, XLDeploy REST API.
+Config (URLs + tokens) via `application.yml` / environment variables, never committed.
+
+## Build, run & test
+
+Backend (set JAVA_HOME to a JDK 21+; locally `~/.jdks/openjdk-22.0.1`):
+```
+cd pip-assistant-backend
+./mvnw test            # run unit tests
+./mvnw spring-boot:run # start API on http://localhost:8080  (GET /api/health -> {"status":"UP"})
+```
+
+Frontend:
+```
+cd pip-assistant-frontend
+npm install
+npm start              # ng serve on http://localhost:4200 (proxies /api to :8080)
+npm run build
+npx ng test --watch=false
+```
+
+IntelliJ: open the repo root. Three shared run configs are provided —
+`Backend (Spring Boot)`, `Frontend (npm start)`, and the compound
+`PIP Assistant (Full Stack)` that launches both.
+
+## Conventions (must follow)
+
+- **Language**: all code and documentation in **English**; communicate with the user in **French**.
+- **Docs**: update functional & technical documentation under `doc/` after every change.
+- **Tests**: write JUnit tests (backend) / unit tests (frontend); run and verify the
+  application after every change.
+- Use **Context7** to confirm exact versions and API syntax (Spring Boot 4, Spring
+  Security, Angular, Angular Material, Flyway, springdoc) before using a library.
+
+## Domain model (target — for later phases)
+
+Business entities (entered via the app): `Pip`, `Team`, `Project`, `Requirement`,
+`Workload` (story points per team), `PipCapacity`, `Comment`, `Action`, `ExcelImport`.
+Synced from external systems: `Ticket`, `Developer`, `Version`, `Release`.
+
+Jira ticket categories drive the key prefix (e.g. `DEV-512`, `MNT-5155`, `TCM-120`):
+DEV (development), MNT (maintenance), INV (investigation), REQ (requirement, parent = TCM),
+TCM (project), REL (release, fix version `yyyy-nnn`). See `doc/functional/` for full rules.
+
+## Current status
+
+Phase 1 (scaffold / hello world) is complete: empty hexagonal structure + `/api/health`
+end-to-end. No business model or features yet.
