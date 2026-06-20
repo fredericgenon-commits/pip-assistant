@@ -27,8 +27,8 @@ pip-assistant/
 
 ## Stack
 
-**Backend** — Spring Boot 4.1.0, Java 21 (built/tested locally with OpenJDK 22),
-Maven via the `mvnw` wrapper. Hexagonal architecture: `domain`, `application`,
+**Backend** — Spring Boot 4.1.0, Java 21 (Amazon Corretto 21,
+`C:\Program Files\Amazon Corretto\jdk21.0.11_10`), Maven via the `mvnw` wrapper. Hexagonal architecture: `domain`, `application`,
 `infrastructure` under `com.utmost.lu.pipassistant`. Persistence: Spring Data JPA +
 H2 (dev), schema managed by **Flyway** (`src/main/resources/db/migration`); the target
 DB is MS SQL Server, so keep SQL portable. OpenAPI/Actuator available.
@@ -42,7 +42,7 @@ Config (URLs + tokens) via `application.yml` / environment variables, never comm
 
 ## Build, run & test
 
-Backend (set JAVA_HOME to a JDK 21+; locally `~/.jdks/openjdk-22.0.1`):
+Backend (JAVA_HOME = Amazon Corretto 21, `C:\Program Files\Amazon Corretto\jdk21.0.11_10`):
 ```
 cd pip-assistant-backend
 ./mvnw test            # run unit tests

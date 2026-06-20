@@ -17,7 +17,7 @@ Monorepo with two independently buildable projects:
 ## Backend
 
 - **Build/runtime**: `mvnw` wrapper; targets Java 21 (`<java.version>21</java.version>`),
-  compiled/tested locally with OpenJDK 22.
+  compiled/tested with Amazon Corretto 21 (`C:\Program Files\Amazon Corretto\jdk21.0.11_10`).
 - **Persistence**: Spring Data JPA. Dev DB is H2 in-memory; schema owned by **Flyway**
   (`src/main/resources/db/migration`, starting at `V1__init.sql`). Hibernate
   `ddl-auto=none`. Target DB: **MS SQL Server** — keep migrations and types portable.

@@ -18,7 +18,7 @@ planning file with JIRA, GitLab and XLDeploy.
 
 ## Prerequisites
 
-- JDK 21+ (the backend targets Java 21; built locally with OpenJDK 22)
+- JDK 21 (the backend targets Java 21; validated with Amazon Corretto 21)
 - Node.js 20+ and npm (validated with Node 24 / npm 11)
 - Maven is not required — use the bundled `mvnw` wrapper
 
