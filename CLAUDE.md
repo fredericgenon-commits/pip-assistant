@@ -21,7 +21,8 @@ Document). The app will:
 pip-assistant/
 ├─ pip-assistant-backend/    # Spring Boot 4 (Maven, Java 21), hexagonal architecture
 ├─ pip-assistant-frontend/   # Angular 21 (Tailwind CSS + Angular Material)
-├─ doc/                      # functional + technical documentation (Markdown)
+├─ doc/                      # functional.md + technical.md (Markdown, Mermaid diagrams)
+├─ .claude/history/          # prompt history (see "Prompt history" below)
 └─ .idea/runConfigurations/  # shared IntelliJ run configs (versioned)
 ```
 
@@ -65,7 +66,8 @@ IntelliJ: open the repo root. Three shared run configs are provided —
 ## Conventions (must follow)
 
 - **Language**: all code and documentation in **English**; communicate with the user in **French**.
-- **Docs**: update functional & technical documentation under `doc/` after every change.
+- **Docs**: update `doc/functional.md` and `doc/technical.md` after every change.
+  Use **Mermaid** diagrams where they clarify a model, flow or architecture.
 - **Tests**: write JUnit tests (backend) / unit tests (frontend); run and verify the
   application after every change.
 - Use **Context7** to confirm exact versions and API syntax (Spring Boot 4, Spring
@@ -79,9 +81,21 @@ Synced from external systems: `Ticket`, `Developer`, `Version`, `Release`.
 
 Jira ticket categories drive the key prefix (e.g. `DEV-512`, `MNT-5155`, `TCM-120`):
 DEV (development), MNT (maintenance), INV (investigation), REQ (requirement, parent = TCM),
-TCM (project), REL (release, fix version `yyyy-nnn`). See `doc/functional/` for full rules.
+TCM (project), REL (release, fix version `yyyy-nnn`). See `doc/functional.md` for full rules.
+
+## Prompt history
+
+Significant prompts and their outcomes are recorded under `.claude/history/`, **grouped
+by feature/phase** (not by day — a feature often spans several days, and a single day may
+touch several features). Files are numbered: `NN_<feature-slug>.md` (e.g.
+`01_initial_prompt.md`, `02_environment-and-github.md`).
+
+Each file has the same shape: a short title, the **prompt(s)** verbatim (or summarized
+when long), and a `## Result` section describing what was delivered and verified. When a
+new prompt clearly continues an existing feature, append to that file; otherwise start the
+next number. Keep this history up to date as part of finishing a task.
 
 ## Current status
 
 Phase 1 (scaffold / hello world) is complete: empty hexagonal structure + `/api/health`
-end-to-end. No business model or features yet.
+end-to-end, built on Amazon Corretto 21, pushed to GitHub. No business model or features yet.

@@ -1,0 +1,171 @@
+# Functional Documentation — PIP Assistant
+
+> Keep this document updated after every functional change.
+
+## Purpose
+
+PIP Assistant supports Scrum Masters in preparing the backlog for the next **PIP**.
+
+A **PIP** is a 7-week cycle: 6 weeks of development (3 sprints) followed by 1 week
+dedicated to preparing the next PIP.
+
+```mermaid
+gantt
+    title PIP cycle (7 weeks)
+    dateFormat YYYY-MM-DD
+    axisFormat %b %d
+    section Development
+    Sprint 1 (2w)         :s1, 2026-01-05, 14d
+    Sprint 2 (2w)         :s2, after s1, 14d
+    Sprint 3 (2w)         :s3, after s2, 14d
+    section Preparation
+    Prepare next PIP (1w) :prep, after s3, 7d
+```
+
+To prepare a PIP, Project Managers send development a regularly-updated **Excel file**
+listing the next PIP's projects. Each row contains:
+
+- the **TCM** (project) and its description;
+- the **REQ** (requirement) and its description;
+- a **comment** column;
+- the known **workload per team**: Core, Portal, Process, Assets, API, Document.
+
+## Goals
+
+1. Identify requirements in JIRA together with their development tickets.
+2. Track successive updates of the Excel planning file.
+3. Manage comments and required actions per team and per REQ.
+
+## Domain model (target)
+
+Entities entered via the app and how they relate. Primary keys are technical `id`s.
+
+```mermaid
+erDiagram
+    PIP ||--o{ PROJECT : contains
+    PIP ||--o{ PIP_CAPACITY : "planned with"
+    TEAM ||--o{ PIP_CAPACITY : provides
+    TEAM ||--o{ WORKLOAD : estimates
+    TEAM ||--o{ COMMENT : writes
+    TEAM ||--o{ ACTION : owns
+    PROJECT ||--o{ REQUIREMENT : groups
+    REQUIREMENT ||--o{ WORKLOAD : "split per team"
+    REQUIREMENT ||--o{ COMMENT : has
+    REQUIREMENT ||--o{ ACTION : has
+
+    PIP {
+        long id PK
+        string code
+        date startDate
+        date endDate
+        string status
+    }
+    TEAM {
+        long id PK
+        string name
+    }
+    PROJECT {
+        long id PK
+        string tcmKey
+        string description
+    }
+    REQUIREMENT {
+        long id PK
+        string reqKey
+        string description
+        string pmComment
+    }
+    WORKLOAD {
+        long id PK
+        int estimate "story points"
+    }
+    PIP_CAPACITY {
+        long id PK
+        int capacity "story points"
+    }
+    COMMENT {
+        long id PK
+        string text
+    }
+    ACTION {
+        long id PK
+        string description
+        string status
+    }
+    EXCEL_IMPORT {
+        long id PK
+        string fileName
+        datetime importDate
+        string importedBy
+        string version
+    }
+```
+
+`ExcelImport` records one entry per update of the PM Excel file (used to track how the
+plan evolves across the preparation week).
+
+Data **synced from external systems** (not edited in the app): `Ticket`, `Developer`,
+`Version`, `Release`.
+
+## JIRA ticket categories
+
+Categories correspond to "Projects" in JIRA and define the key prefix — every ticket
+key starts with its category (e.g. `DEV-512`, `MNT-5155`, `TCM-120`).
+
+| Category | Role | Delivery method | Epic | Parent | Key prefix |
+|----------|------|-----------------|------|--------|------------|
+| DEV | Development | Project, IT only | Epic (REQ) | — | `DEV-` |
+| MNT | Maintenance | Continuous Improvement | Epic (MNT) | — | `MNT-` |
+| INV | Investigation | Continuous Improvement | — | — | `DEV-` |
+| REQ | Requirement | (always Project) | — | TCM | `REQ-` |
+| TCM | Project | (always Project) | — | — | `TCM-` |
+| REL | Release | — | — | — | fix version `yyyy-nnn` |
+
+### Project ticket hierarchy
+
+```mermaid
+flowchart TD
+    TCM["TCM-… (Project)"]
+    REQ["REQ-… (Epic / Requirement)"]
+    DEV["DEV-… (Story / Bug)"]
+    SUB["Sub-tasks<br/>Preparation / Pre-deployment / Post-deployment"]
+
+    TCM -->|parent of| REQ
+    REQ -->|epic of| DEV
+    DEV -->|sub-tasks| SUB
+```
+
+## Cross-source links
+
+```mermaid
+flowchart LR
+    subgraph JIRA
+        T["Ticket (key, fixVersion)"]
+    end
+    subgraph GitLab
+        C["Commit (title starts with ticket key)"]
+        V["Tag / Version"]
+        P["Project"]
+    end
+    subgraph XLDeploy
+        D["Deployment of a GitLab tag"]
+    end
+
+    C -->|title prefix = ticket.key| T
+    C --> V
+    C --> P
+    V -->|tag = Jira fixVersion of DEV/INV/MNT| T
+    V --> D
+    P -.->|matches| T
+```
+
+- **JIRA ↔ GitLab**: a commit links to a ticket when `commit.title` starts with the
+  ticket key.
+- **GitLab ↔ XLDeploy**: a GitLab tag is deployed via XLDeploy; that tag is also the
+  fix version of DEV, INV and MNT tickets in JIRA.
+- **GitLab**: each commit belongs to a version and a GitLab project; the GitLab project
+  matches the ticket's `component`. A version may be added to a release.
+
+## Features
+
+To be defined in later phases (Phase 1 delivers only the technical scaffold).

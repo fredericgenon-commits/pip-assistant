@@ -4,15 +4,70 @@
 
 ## Architecture overview
 
-Monorepo with two independently buildable projects:
+Monorepo with two independently buildable projects: an Angular frontend and a Spring
+Boot backend. In development the Angular dev server proxies `/api` calls to the backend.
 
-- **Backend** (`pip-assistant-backend/`) — Spring Boot 4.1.0, Java 21, Maven.
-  **Hexagonal architecture** (ports & adapters):
-  - `domain` — entities, value objects, domain services, ports (empty in Phase 1).
-  - `application` — use cases / application services (empty in Phase 1).
-  - `infrastructure` — adapters: `web` (REST controllers), `config` (cross-cutting config).
-- **Frontend** (`pip-assistant-frontend/`) — Angular 21 (standalone components, signals),
-  Tailwind CSS 4, Angular Material. Talks to the backend over `/api`, proxied in dev.
+```mermaid
+flowchart LR
+    Browser["Browser"]
+    subgraph Frontend["pip-assistant-frontend — Angular 21"]
+        NG["ng serve :4200<br/>Tailwind + Material"]
+        Proxy["proxy.conf.json<br/>/api/** → :8080"]
+    end
+    subgraph Backend["pip-assistant-backend — Spring Boot 4.1"]
+        API["REST API :8080"]
+        FW["Flyway"]
+        DB[("H2 (dev) → MS SQL (target)")]
+    end
+
+    Browser --> NG
+    NG --> Proxy
+    Proxy -->|/api/**| API
+    API --> DB
+    FW -->|migrations| DB
+```
+
+### Hexagonal layers (backend)
+
+```mermaid
+flowchart TB
+    subgraph infrastructure
+        web["web — REST controllers<br/>(HealthController)"]
+        config["config — cross-cutting<br/>(WebCorsConfig)"]
+        persistence["persistence — JPA adapters<br/>(later phases)"]
+    end
+    subgraph application
+        usecases["use cases / app services<br/>(later phases)"]
+    end
+    subgraph domain
+        model["entities, value objects, ports<br/>(later phases)"]
+    end
+
+    web --> usecases
+    config --> usecases
+    usecases --> model
+    persistence --> model
+```
+
+Packages under `com.utmost.lu.pipassistant`: `domain`, `application`, `infrastructure`.
+In Phase 1 `domain` and `application` are empty; `infrastructure.web` and
+`infrastructure.config` hold the only code.
+
+## Health round-trip (Phase 1 end-to-end)
+
+```mermaid
+sequenceDiagram
+    participant B as Browser
+    participant A as App (Angular)
+    participant P as Dev proxy (:4200)
+    participant S as Spring Boot (:8080)
+    B->>A: load page
+    A->>P: GET /api/health
+    P->>S: GET /api/health
+    S-->>P: 200 {"status":"UP"}
+    P-->>A: 200 {"status":"UP"}
+    A-->>B: render status in mat-card
+```
 
 ## Backend
 
@@ -50,6 +105,10 @@ Monorepo with two independently buildable projects:
 | Frontend run | `cd pip-assistant-frontend && npm start` |
 | Frontend build | `cd pip-assistant-frontend && npm run build` |
 | Frontend tests | `cd pip-assistant-frontend && npx ng test --watch=false` |
+
+IntelliJ: open the repo root, let it import the `pip-assistant-backend` Maven project,
+then use the shared run configs (`Backend (Spring Boot)`, `Frontend (npm start)`, and the
+`PIP Assistant (Full Stack)` compound). Point the Project SDK at Amazon Corretto 21.
 
 CORS: the backend allows `http://localhost:4200` (`WebCorsConfig`) for direct calls;
 the dev proxy is the primary mechanism during development.

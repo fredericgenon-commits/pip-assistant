@@ -43,6 +43,6 @@ the backend and frontend together.
 
 ## Documentation
 
-- [Functional documentation](doc/functional/README.md)
-- [Technical documentation](doc/technical/README.md)
+- [Functional documentation](doc/functional.md)
+- [Technical documentation](doc/technical.md)
 - [Project guidance for Claude Code](CLAUDE.md)
