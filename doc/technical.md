@@ -235,6 +235,24 @@ The frontend `pip-detail/` component loads the aggregate, edits cells in place (
 inputs/select in a `mat-table` with `MatSort`; `Total`/`Capacity` as two `mat-footer-row`s),
 tracks a dirty flag and persists everything via one PUT.
 
+## Test data tooling
+
+The Claude Code project skill `.claude/skills/generate-test-excel/` generates a coherent
+PIP planning `.xlsx` fixture — the file Project Managers send to development (one row per
+REQ: `TCM`, `TCM Description`, `REQ`, `REQ Description`, `Comment`, plus one story-point
+column per seeded team). It is a self-contained Node script (`exceljs`), independent of the
+backend and frontend builds.
+
+```
+cd .claude/skills/generate-test-excel
+npm install
+node generate.js --versions 2 --seed 42   # → <repo>/test-data/26_PIP_1_v1.xlsx (+ _v2.xlsx)
+```
+
+A fixed `--seed` is reproducible; `--versions 2` also emits a v2 delta (stable keys, added/
+re-estimated/dropped rows) to exercise the future Excel-import update tracking. Output lands
+in the git-ignored `test-data/` directory. See the skill's `SKILL.md` for all options.
+
 ## Planned (later phases)
 
 - Spring Security + JWT, CORS hardening.

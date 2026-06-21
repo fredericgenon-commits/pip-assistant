@@ -54,3 +54,7 @@ desktop.ini
 coverage/
 *.lcov
 /test-results/
+
+# ===== Generated test fixtures =====
+# Output of the generate-test-excel skill (regenerate on demand, don't commit).
+test-data/

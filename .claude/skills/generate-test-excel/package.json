@@ -1,0 +1,16 @@
+{
+  "name": "pip-assistant-generate-test-excel",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "description": "Generate a coherent PIP planning .xlsx test fixture for PIP Assistant.",
+  "bin": {
+    "generate-pip-xlsx": "generate.js"
+  },
+  "scripts": {
+    "generate": "node generate.js"
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0"
+  }
+}
