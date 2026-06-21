@@ -14,6 +14,8 @@ public record RequirementRowResponse(
         String description,
         String status,
         String pmComment,
+        Integer priority,
+        String pipStatus,
         Map<Long, BigDecimal> workloads,
         Map<Long, String> comments) {
 
@@ -26,6 +28,8 @@ public record RequirementRowResponse(
                 row.description(),
                 row.status(),
                 row.pmComment(),
+                row.priority(),
+                row.pipStatus(),
                 row.workloads(),
                 row.comments());
     }

@@ -17,6 +17,13 @@ export class PipDetailService {
     return this.http.put<void>(`/api/pips/${pipId}/detail`, payload);
   }
 
+  /** Upload a PM planning .xlsx; the backend parses, versions and returns the refreshed detail. */
+  import(pipId: number, file: File): Observable<PipDetail> {
+    const form = new FormData();
+    form.append('file', file);
+    return this.http.post<PipDetail>(`/api/pips/${pipId}/imports`, form);
+  }
+
   requirementStatuses(): Observable<string[]> {
     return this.http.get<string[]>('/api/requirement-statuses');
   }

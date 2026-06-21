@@ -54,7 +54,7 @@ class PipDetailServiceTest {
         when(detailRepository.findProjectsByPip(1L))
                 .thenReturn(List.of(new Project(5L, "TCM-1", "TCM desc", 1L)));
         when(detailRepository.findRequirementsByPip(1L))
-                .thenReturn(List.of(new Requirement(7L, "REQ-1", "req desc", "TODO", "pm", 5L)));
+                .thenReturn(List.of(new Requirement(7L, "REQ-1", "req desc", "TODO", "pm", 5L, 1, "NEW")));
         when(detailRepository.findWorkloadsByPip(1L))
                 .thenReturn(List.of(new Workload(7L, 10L, new BigDecimal("3.5"))));
         when(detailRepository.findDevCommentsByPip(1L))
@@ -86,7 +86,7 @@ class PipDetailServiceTest {
         when(pipRepository.findById(1L)).thenReturn(Optional.of(pip(1L)));
         when(statusCatalog.all()).thenReturn(List.of("TODO", "IN_PROGRESS", "DONE"));
         when(detailRepository.findRequirementsByPip(1L))
-                .thenReturn(List.of(new Requirement(7L, "REQ-1", "d", "TODO", "pm", 5L)));
+                .thenReturn(List.of(new Requirement(7L, "REQ-1", "d", "TODO", "pm", 5L, 1, "NEW")));
 
         var edit = new SavePipDetailCommand.RequirementEdit(
                 7L, "new tcm desc", "new req desc", "DONE", "pm2",

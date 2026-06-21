@@ -58,3 +58,6 @@ coverage/
 # ===== Generated test fixtures =====
 # Output of the generate-test-excel skill (regenerate on demand, don't commit).
 test-data/
+
+# ===== Local H2 file database (dev) =====
+pip-assistant-backend/data/

@@ -30,6 +30,14 @@ public class RequirementEntity {
     @Column(name = "project_id", nullable = false)
     private Long projectId;
 
+    /** 1-based order of appearance in the latest import; null when removed from the PIP. */
+    @Column(name = "priority")
+    private Integer priority;
+
+    /** Diff-derived PIP status (NEW, UNCHANGED, CHANGED, PRIORITY_CHANGED, REMOVED_FROM_PIP, MISSING_DATA). */
+    @Column(name = "pip_status", length = 40)
+    private String pipStatus;
+
     protected RequirementEntity() {
     }
 
@@ -77,5 +85,25 @@ public class RequirementEntity {
 
     public Long getProjectId() {
         return projectId;
+    }
+
+    public void setProjectId(Long projectId) {
+        this.projectId = projectId;
+    }
+
+    public Integer getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Integer priority) {
+        this.priority = priority;
+    }
+
+    public String getPipStatus() {
+        return pipStatus;
+    }
+
+    public void setPipStatus(String pipStatus) {
+        this.pipStatus = pipStatus;
     }
 }

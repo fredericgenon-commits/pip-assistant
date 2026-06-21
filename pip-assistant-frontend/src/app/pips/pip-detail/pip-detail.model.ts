@@ -17,6 +17,10 @@ export interface RequirementRow {
   description: string;
   status: string;
   pmComment: string;
+  /** 1-based import priority; null when removed from the PIP. */
+  priority: number | null;
+  /** Diff-derived PIP status name (NEW, CHANGED, REMOVED_FROM_PIP, ...); null before any import. */
+  pipStatus: string | null;
   /** team id -> story points */
   workloads: Record<number, number | null>;
   /** team id -> dev comment */

@@ -235,6 +235,44 @@ The frontend `pip-detail/` component loads the aggregate, edits cells in place (
 inputs/select in a `mat-table` with `MatSort`; `Total`/`Capacity` as two `mat-footer-row`s),
 tracks a dirty flag and persists everything via one PUT.
 
+## Excel import slice
+
+Drag & drop import of the PM `.xlsx` on PIP Details (Slice 1: import + diff; version
+history viewer and rollback are Slice 2). Reuses the hexagonal pattern.
+
+- **Domain**: `RequirementPipStatus` enum; records `ParsedRequirement`,
+  `SnapshotRequirement`, `DiffedRequirement`, `ImportDiff`; ports `ExcelRequirementParser`
+  and `ExcelImportRepository`; pure `domain.service.ImportDiffCalculator` (priority + status
+  from parsed-vs-previous-snapshot, no I/O). `Requirement` gains `priority` + `pipStatus`.
+- **Application**: `ImportExcelService.importFile` orchestrates parse → diff → persist →
+  return the refreshed `PipDetailView`. Invalid file → `InvalidExcelFileException`.
+- **Infrastructure**: `PoiExcelRequirementParser` (Apache POI `WorkbookFactory`, columns by
+  configured position, `TCM-\d+`/`REQ-\d+` regex); `ExcelImportRepositoryAdapter` stores the
+  raw snapshot (`excel_import`, `imported_requirement`, `imported_workload`) and updates the
+  live requirement/workload tables, honouring `workload.manual_override`;
+  `PipImportController` (multipart) + `PipImportExceptionHandler` (404 / 422). Layout from
+  `ExcelImportProperties` (`@ConfigurationProperties("pip.import")`). Schema: Flyway `V4`.
+
+The manual-override flag is set on the bulk Save path (`PipDetailRepositoryAdapter.upsertWorkload`
+flips it when a value changes); imports skip overridden cells. `PipDetailService.getDetail`
+sorts by priority with removed requirements last.
+
+### Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/pips/{id}/imports` | Import a planning `.xlsx` (multipart `file`) → refreshed detail / 404 / 422 |
+
+```mermaid
+flowchart TB
+    C["PipImportController"] --> S["ImportExcelService"]
+    S --> Pa["ExcelRequirementParser (POI)"]
+    S --> Di["ImportDiffCalculator (pure)"]
+    S --> Re["ExcelImportRepository"]
+    Re -.implements.- A["ExcelImportRepositoryAdapter<br/>snapshot + live upsert (override-aware)"]
+    S --> V["PipDetailService.getDetail → refreshed view"]
+```
+
 ## Test data tooling
 
 The Claude Code project skill `.claude/skills/generate-test-excel/` generates a coherent
@@ -256,7 +294,6 @@ in the git-ignored `test-data/` directory. See the skill's `SKILL.md` for all op
 ## Planned (later phases)
 
 - Spring Security + JWT, CORS hardening.
-- PIP detail enhancements (add/remove requirements once the import exists), OpenAPI,
-  status-admin screen.
+- Excel import Slice 2: version history viewer + rollback (snapshots already stored).
+- PIP detail enhancements (status/date editing), OpenAPI, status-admin screen.
 - Integrations: GitLab REST API v4, JIRA REST API, XLDeploy REST API.
-- Excel import & change tracking.

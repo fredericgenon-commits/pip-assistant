@@ -27,6 +27,10 @@ public class WorkloadEntity {
     @Column(name = "estimate", precision = 7, scale = 2)
     private BigDecimal estimate;
 
+    /** True once a user edits this cell: subsequent imports must not overwrite it. */
+    @Column(name = "manual_override", nullable = false)
+    private boolean manualOverride = false;
+
     protected WorkloadEntity() {
     }
 
@@ -50,5 +54,13 @@ public class WorkloadEntity {
 
     public void setEstimate(BigDecimal estimate) {
         this.estimate = estimate;
+    }
+
+    public boolean isManualOverride() {
+        return manualOverride;
+    }
+
+    public void setManualOverride(boolean manualOverride) {
+        this.manualOverride = manualOverride;
     }
 }

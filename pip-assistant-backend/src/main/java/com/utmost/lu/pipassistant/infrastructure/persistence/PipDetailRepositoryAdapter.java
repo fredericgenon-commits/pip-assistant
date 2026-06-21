@@ -53,7 +53,8 @@ public class PipDetailRepositoryAdapter implements PipDetailRepository {
         }
         return requirementRepository.findByProjectIdIn(projectIds).stream()
                 .map(e -> new Requirement(e.getId(), e.getReqKey(), e.getDescription(),
-                        e.getStatus(), e.getPmComment(), e.getProjectId()))
+                        e.getStatus(), e.getPmComment(), e.getProjectId(),
+                        e.getPriority(), e.getPipStatus()))
                 .toList();
     }
 
@@ -108,8 +109,20 @@ public class PipDetailRepositoryAdapter implements PipDetailRepository {
     public void upsertWorkload(Long requirementId, Long teamId, BigDecimal estimate) {
         WorkloadEntity entity = workloadRepository.findByRequirementIdAndTeamId(requirementId, teamId)
                 .orElseGet(() -> new WorkloadEntity(requirementId, teamId, null));
+        // This path is the manual Save: a changed value becomes a manual override that
+        // subsequent imports must not overwrite.
+        if (numericChanged(entity.getEstimate(), estimate)) {
+            entity.setManualOverride(true);
+        }
         entity.setEstimate(estimate);
         workloadRepository.save(entity);
+    }
+
+    private static boolean numericChanged(BigDecimal current, BigDecimal next) {
+        if (current == null || next == null) {
+            return current != next;
+        }
+        return current.compareTo(next) != 0;
     }
 
     @Override
@@ -136,7 +149,8 @@ public class PipDetailRepositoryAdapter implements PipDetailRepository {
         RequirementEntity saved = requirementRepository.save(
                 new RequirementEntity(null, reqKey, description, status, pmComment, project.getId()));
         return new Requirement(saved.getId(), saved.getReqKey(), saved.getDescription(),
-                saved.getStatus(), saved.getPmComment(), saved.getProjectId());
+                saved.getStatus(), saved.getPmComment(), saved.getProjectId(),
+                saved.getPriority(), saved.getPipStatus());
     }
 
     private List<Long> requirementIdsOf(Long pipId) {

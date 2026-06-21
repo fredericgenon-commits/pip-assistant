@@ -66,6 +66,10 @@ IntelliJ: open the repo root. Three shared run configs are provided —
 ## Conventions (must follow)
 
 - **Language**: all code and documentation in **English**; communicate with the user in **French**.
+- **Business logic lives in the backend.** The Angular frontend stays presentation-only:
+  no business computation, diffing, status derivation or validation rules on the client —
+  it renders what the API returns and sends user input back. (Pure UI concerns — formatting,
+  sorting, mapping a backend status name to a label/colour — are fine.)
 - **Docs**: update `doc/functional.md` and `doc/technical.md` after every change.
   Use **Mermaid** diagrams where they clarify a model, flow or architecture.
 - **Tests**: write JUnit tests (backend) / unit tests (frontend); run and verify the
@@ -106,5 +110,11 @@ next number. Keep this history up to date as part of finishing a task.
   `Workload`/`DevComment`/`PipCapacity` (Flyway `V3`, seeds 6 teams), aggregated
   `GET/PUT /api/pips/{id}/detail`, configurable requirement statuses
   (`pip.requirement.statuses`). Editable worksheet (sortable grid, Total/Capacity footers,
-  bulk Save). Requirements are not created in the UI yet — they await the Excel/JIRA import.
-  Future: status/date editing, the import, and the integrations.
+  bulk Save).
+- **Excel import** (`POST /api/pips/{id}/detail` screen, Slice 1): complete. Drag & drop a
+  PM `.xlsx` on PIP Details to populate/refresh requirements. Apache POI parser (columns by
+  position, `pip.import.*`), per-PIP versioning with stored snapshots (Flyway `V4`), diff
+  vs the previous version producing **Priority** + **PIP status**
+  (NEW/UNCHANGED/CHANGED/PRIORITY_CHANGED/REMOVED_FROM_PIP/MISSING_DATA), manual workload
+  edits preserved across re-imports. Test fixtures via the `generate-test-excel` skill.
+  Future (Slice 2): version history viewer + rollback. Then status/date editing, integrations.

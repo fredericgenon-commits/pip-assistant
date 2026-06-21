@@ -219,14 +219,58 @@ Opened by double-clicking a PIP. Title "PIP Details". Shows the PIP **name** and
   workloads, capacities). Requirement statuses are validated against a **configurable list**
   (`application.yml`, default `TODO / IN_PROGRESS / DONE`); an unknown status is rejected (400).
 
-Requirements are **not created here** — they will come from the future Excel/JIRA import,
-so the table is empty until then (a backend create endpoint exists for tests/import).
+Requirements come from the **Excel import** (below). The grid also shows two import-derived
+read-only columns: **Priority** (first) and **PIP status**.
 
 ```mermaid
 flowchart LR
     G["Requirements grid<br/>(editable, sortable)"] -->|edit cells| G
     Team["Team select"] -->|drives| DC["Dev comment column"]
-    G --> Tot["Total per team (computed)"]
+    G --> Tot["Total per team (computed, excludes removed)"]
     Cap["Capacity per team (editable)"]
     G -->|Save → 204| G
+```
+
+### Excel import (PIP Details)
+
+Project Managers send a regularly-updated `.xlsx`. On the PIP Details screen a **drag &
+drop zone** accepts a file (a new drop replaces the previous one); a non-`.xlsx` triggers a
+one-line transient toast and leaves **Import this file** disabled. Clicking the button
+parses and imports the file into the current PIP.
+
+**Recognising REQ rows** — a row is a requirement when its REQ column contains a `REQ-xxx`
+key; other rows (headers, blanks, comments) and extra columns are ignored. Mandatory fields
+are **TCM key (`TCM-xxx`), TCM description, REQ description**; a REQ row missing one is still
+imported but flagged (see PIP status). Column positions are configurable
+(`pip.import.*`) since the file's header labels may differ (e.g. "REQ Title").
+
+**Versioning** — versions are tracked **per PIP**. The first import is v1, each later one
+increments (v2, v3…). Every version's parsed rows are stored as a snapshot (basis for the
+diff and a future rollback).
+
+**Priority** — recomputed at each import from the REQ order in the file (1 = first). It is
+the default sort. Requirements removed from the PIP have no priority and sink to the bottom.
+
+**Diff & PIP status** — each REQ (identified by its `REQ-xxx` key) is compared to the
+previous version's snapshot:
+
+| PIP status | Meaning | Row style |
+|------------|---------|-----------|
+| `New` | First appearance (all of v1; a REQ added later) | — |
+| `Unchanged` | Same content and same priority | — |
+| `Priority changed` | Same content, different priority | — |
+| `Changed` | A content field changed (TCM/REQ desc, comment, file workloads) | — |
+| `Removed from PIP` | In the previous version, gone from the new file; kept visible | light grey, excluded from totals |
+| `Missing data in import file` | A mandatory field is absent | pale red |
+
+**Workloads** — per-team story points are optional in the file. A user may edit a workload
+in the grid; once edited it becomes a manual override that **later imports do not
+overwrite** (the PM remains authoritative for descriptions and comments).
+
+```mermaid
+flowchart LR
+    D["Drop .xlsx"] -->|valid| B["Import this file enabled"]
+    D -->|invalid| T["toast + button stays disabled"]
+    B -->|POST /api/pips/:id/imports| P["parse → diff vs previous → store version"]
+    P --> R["refreshed grid: Priority + PIP status"]
 ```

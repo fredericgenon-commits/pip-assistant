@@ -22,6 +22,8 @@ function detail(): PipDetailModel {
         description: 'req',
         status: 'TODO',
         pmComment: 'pm',
+        priority: 1,
+        pipStatus: 'NEW',
         workloads: { 1: 3, 2: 5 },
         comments: { 1: 'core note' }
       }
@@ -30,17 +32,30 @@ function detail(): PipDetailModel {
   };
 }
 
+function dropEvent(fileName: string): DragEvent {
+  return {
+    preventDefault: () => undefined,
+    dataTransfer: { files: [new File([], fileName)] }
+  } as unknown as DragEvent;
+}
+
 describe('PipDetail', () => {
   let saveCalls: Array<{ pipId: number; payload: SavePipDetailPayload }>;
+  let importCalls: Array<{ pipId: number; file: File }>;
 
   beforeEach(async () => {
     saveCalls = [];
+    importCalls = [];
     const serviceStub: Partial<PipDetailService> = {
       getDetail: () => of(detail()),
       requirementStatuses: () => of(['TODO', 'IN_PROGRESS', 'DONE']),
       save: (pipId: number, payload: SavePipDetailPayload): Observable<void> => {
         saveCalls.push({ pipId, payload });
         return of(undefined);
+      },
+      import: (pipId: number, file: File): Observable<PipDetailModel> => {
+        importCalls.push({ pipId, file });
+        return of(detail());
       }
     };
 
@@ -76,5 +91,31 @@ describe('PipDetail', () => {
     expect(saveCalls[0].payload.requirements[0].id).toBe(7);
     expect(saveCalls[0].payload.requirements[0].workloads).toEqual({ 1: 3, 2: 5 });
     expect(saveCalls[0].payload.capacities).toEqual({ 1: 10 });
+  });
+
+  it('accepts a dropped .xlsx and rejects other files', () => {
+    const fixture = TestBed.createComponent(PipDetail);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+
+    component['onDrop'](dropEvent('plan.xlsx'));
+    expect(component['droppedFile']()?.name).toBe('plan.xlsx');
+
+    component['onDrop'](dropEvent('plan.txt'));
+    expect(component['droppedFile']()).toBeNull();
+  });
+
+  it('imports the dropped file via the service and clears it', () => {
+    const fixture = TestBed.createComponent(PipDetail);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+
+    component['onDrop'](dropEvent('plan.xlsx'));
+    component['importFile']();
+
+    expect(importCalls.length).toBe(1);
+    expect(importCalls[0].pipId).toBe(1);
+    expect(importCalls[0].file.name).toBe('plan.xlsx');
+    expect(component['droppedFile']()).toBeNull();
   });
 });

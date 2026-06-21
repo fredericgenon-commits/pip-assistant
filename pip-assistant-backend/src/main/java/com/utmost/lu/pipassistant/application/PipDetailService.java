@@ -1,6 +1,7 @@
 package com.utmost.lu.pipassistant.application;
 
 import java.math.BigDecimal;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -77,9 +78,17 @@ public class PipDetailService {
                             req.description(),
                             req.status(),
                             req.pmComment(),
+                            req.priority(),
+                            req.pipStatus(),
                             workloadsByRequirement.getOrDefault(req.id(), Map.of()),
                             commentsByRequirement.getOrDefault(req.id(), Map.of()));
                 })
+                // Default order = priority ascending; requirements removed from the PIP
+                // (null priority) sink to the bottom, ordered by REQ key.
+                .sorted(Comparator
+                        .comparing((PipDetailView.RequirementRow r) -> r.priority() == null)
+                        .thenComparing(r -> r.priority() == null ? Integer.MAX_VALUE : r.priority())
+                        .thenComparing(PipDetailView.RequirementRow::reqKey))
                 .toList();
 
         Map<Long, BigDecimal> capacities = detailRepository.findCapacitiesByPip(pipId).stream()

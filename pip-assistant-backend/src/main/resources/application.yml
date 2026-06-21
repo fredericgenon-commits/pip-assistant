@@ -2,10 +2,12 @@ spring:
   application:
     name: pip-assistant-backend
 
-  # H2 in-memory database for development. To be migrated to MS SQL Server later;
-  # keep migrations and types portable (avoid H2-specific SQL).
+  # H2 file-based database for development (data survives restarts). The file lives under
+  # ./data relative to the backend working directory. To be migrated to MS SQL Server
+  # later; keep migrations and types portable (avoid H2-specific SQL).
+  # AUTO_SERVER=TRUE allows the H2 console / a second connection while the app runs.
   datasource:
-    url: jdbc:h2:mem:pipassistant;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    url: jdbc:h2:file:./data/pipassistant;AUTO_SERVER=TRUE
     driver-class-name: org.h2.Driver
     username: sa
     password: ""
@@ -46,3 +48,22 @@ pip:
       - TODO
       - IN_PROGRESS
       - DONE
+  import:
+    # Excel layout for the PM planning file. Columns are matched by 0-based POSITION
+    # (header labels in the file may differ, e.g. "REQ Title"). Matches the files
+    # produced by the generate-test-excel skill.
+    sheet-index: 0
+    first-data-row: 1        # 0-based: row 0 is the header
+    columns:
+      tcm: 0
+      tcm-description: 1
+      req: 2
+      req-description: 3
+      comment: 4
+      teams:                 # team name (seeded) -> column index
+        Core: 5
+        Portal: 6
+        Process: 7
+        Assets: 8
+        API: 9
+        Document: 10

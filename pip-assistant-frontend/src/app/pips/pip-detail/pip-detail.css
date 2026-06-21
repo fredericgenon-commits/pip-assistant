@@ -33,3 +33,33 @@
   outline: none;
   border-color: #6366f1; /* indigo-500 */
 }
+
+/* Excel import drop zone */
+.dropzone {
+  border: 2px dashed #cbd5e1; /* slate-300 */
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  background: #f8fafc; /* slate-50 */
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.dropzone:hover {
+  border-color: #6366f1; /* indigo-500 */
+  background: #eef2ff; /* indigo-50 */
+}
+
+.hidden {
+  display: none;
+}
+
+/* Diff-derived row backgrounds */
+.row-removed td {
+  background: #f1f5f9; /* slate-100: removed from PIP */
+  color: #94a3b8; /* slate-400 */
+}
+
+.row-missing td {
+  background: #fef2f2; /* red-50: missing mandatory data */
+}

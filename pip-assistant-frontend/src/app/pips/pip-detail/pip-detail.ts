@@ -6,9 +6,10 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { PipDetailService } from './pip-detail.service';
-import { PipInfo, RequirementRow, TeamRef } from './pip-detail.model';
+import { PipDetail as PipDetailData, PipInfo, RequirementRow, TeamRef } from './pip-detail.model';
 
 const TEXT_COLUMNS = [
   'tcmKey',
@@ -20,6 +21,18 @@ const TEXT_COLUMNS = [
   'devComment'
 ];
 
+const REMOVED_FROM_PIP = 'REMOVED_FROM_PIP';
+
+/** Display labels for the backend PIP status names (presentation only). */
+const PIP_STATUS_LABELS: Record<string, string> = {
+  NEW: 'New',
+  UNCHANGED: 'Unchanged',
+  CHANGED: 'Changed',
+  PRIORITY_CHANGED: 'Priority changed',
+  REMOVED_FROM_PIP: 'Removed from PIP',
+  MISSING_DATA: 'Missing data in import file'
+};
+
 @Component({
   selector: 'app-pip-detail',
   imports: [
@@ -29,7 +42,8 @@ const TEXT_COLUMNS = [
     MatSortModule,
     MatFormFieldModule,
     MatSelectModule,
-    MatButtonModule
+    MatButtonModule,
+    MatSnackBarModule
   ],
   templateUrl: './pip-detail.html',
   styleUrl: './pip-detail.css'
@@ -38,6 +52,7 @@ export class PipDetail implements AfterViewInit {
   private readonly service = inject(PipDetailService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly snackBar = inject(MatSnackBar);
 
   private readonly pipId = Number(this.route.snapshot.paramMap.get('id'));
 
@@ -49,10 +64,16 @@ export class PipDetail implements AfterViewInit {
   protected readonly dirty = signal(false);
   protected readonly saving = signal(false);
 
+  // Excel import drop zone state.
+  protected readonly droppedFile = signal<File | null>(null);
+  protected readonly importing = signal(false);
+
   protected readonly dataSource = new MatTableDataSource<RequirementRow>([]);
 
   protected readonly displayedColumns = computed(() => [
+    'priority',
     ...TEXT_COLUMNS,
+    'pipStatus',
     ...this.teams().map((t) => 'team_' + t.id)
   ]);
   protected readonly capacityColumns = computed(() => [
@@ -72,6 +93,12 @@ export class PipDetail implements AfterViewInit {
       if (columnId.startsWith('team_')) {
         return row.workloads[Number(columnId.slice(5))] ?? 0;
       }
+      if (columnId === 'priority') {
+        return row.priority ?? Number.MAX_SAFE_INTEGER;
+      }
+      if (columnId === 'pipStatus') {
+        return row.pipStatus ?? '';
+      }
       if (columnId === 'devComment') {
         const teamId = this.selectedTeamId();
         return teamId != null ? row.comments[teamId] ?? '' : '';
@@ -82,30 +109,100 @@ export class PipDetail implements AfterViewInit {
   }
 
   private load(): void {
-    this.service.getDetail(this.pipId).subscribe((detail) => {
-      this.pip.set(detail.pip);
-      this.teams.set(detail.teams);
-      this.capacities.set(detail.capacities ?? {});
-      this.dataSource.data = detail.requirements;
-      if (detail.teams.length > 0) {
-        this.selectedTeamId.set(detail.teams[0].id);
-      }
-      this.dirty.set(false);
-    });
+    this.service.getDetail(this.pipId).subscribe((detail) => this.apply(detail));
+  }
+
+  /** Apply a freshly loaded/imported detail to the view. */
+  private apply(detail: PipDetailData): void {
+    this.pip.set(detail.pip);
+    this.teams.set(detail.teams);
+    this.capacities.set(detail.capacities ?? {});
+    this.dataSource.data = detail.requirements;
+    if (detail.teams.length > 0 && this.selectedTeamId() == null) {
+      this.selectedTeamId.set(detail.teams[0].id);
+    }
+    this.dirty.set(false);
   }
 
   protected markDirty(): void {
     this.dirty.set(true);
   }
 
-  /** Live sum of a team's story points over all requirements. */
+  protected pipStatusLabel(status: string | null): string {
+    return status ? PIP_STATUS_LABELS[status] ?? status : '';
+  }
+
+  protected isRemoved(row: RequirementRow): boolean {
+    return row.pipStatus === REMOVED_FROM_PIP;
+  }
+
+  /** Live sum of a team's story points; requirements removed from the PIP are excluded. */
   protected total(teamId: number): number {
-    return this.dataSource.data.reduce((sum, row) => sum + (Number(row.workloads[teamId]) || 0), 0);
+    return this.dataSource.data
+      .filter((row) => !this.isRemoved(row))
+      .reduce((sum, row) => sum + (Number(row.workloads[teamId]) || 0), 0);
   }
 
   protected setCapacity(teamId: number, value: number | null): void {
     this.capacities.update((caps) => ({ ...caps, [teamId]: value }));
     this.markDirty();
+  }
+
+  // ----- Excel import drop zone -----
+
+  protected onDragOver(event: DragEvent): void {
+    event.preventDefault();
+  }
+
+  protected onDrop(event: DragEvent): void {
+    event.preventDefault();
+    const file = event.dataTransfer?.files?.[0];
+    if (file) {
+      this.acceptFile(file);
+    }
+  }
+
+  protected onFilePicked(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (file) {
+      this.acceptFile(file);
+    }
+    input.value = '';
+  }
+
+  /** A new drop replaces the previous file; non-.xlsx is rejected with a transient toast. */
+  private acceptFile(file: File): void {
+    if (!file.name.toLowerCase().endsWith('.xlsx')) {
+      this.droppedFile.set(null);
+      this.toast('Only .xlsx files can be imported.');
+      return;
+    }
+    this.droppedFile.set(file);
+  }
+
+  protected importFile(): void {
+    const file = this.droppedFile();
+    if (!file) {
+      return;
+    }
+    this.importing.set(true);
+    this.service.import(this.pipId, file).subscribe({
+      next: (detail) => {
+        this.apply(detail);
+        this.droppedFile.set(null);
+        this.importing.set(false);
+        this.toast('Import done.');
+      },
+      error: (err) => {
+        this.importing.set(false);
+        this.toast(err?.error?.message ?? 'The file could not be imported.');
+      }
+    });
+  }
+
+  private toast(message: string): void {
+    this.snackBar.open(message, undefined, { duration: 3500 });
   }
 
   protected save(): void {

@@ -24,6 +24,8 @@ public record PipDetailView(
             String description,
             String status,
             String pmComment,
+            Integer priority,
+            String pipStatus,
             Map<Long, BigDecimal> workloads,
             Map<Long, String> comments) {
     }
