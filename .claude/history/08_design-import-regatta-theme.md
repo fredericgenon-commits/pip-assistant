@@ -42,3 +42,25 @@ Frontend-only re-skin, no business logic moved to the client.
   list table rows, French empty message, detail breadcrumb).
 
 `doc/functional.md`, `doc/technical.md`, `CLAUDE.md` updated.
+
+---
+
+## Follow-up — Marina theme + English UI
+
+### Prompt
+« Add a second theme "Marina". Don't replace the current one, add a button to switch between
+the two. Important: the app must be in **English**, not French as it currently is from Claude
+Design. » (same import/implement instructions as above)
+
+### Result
+- **English UI** — reverted all French copy across the app shell, list, detail, dialog (and
+  their specs), PIP-status labels, save label, toasts and validation messages back to English.
+- **Marina theme** — added the second design direction (navy primary, Plus Jakarta Sans,
+  2 px stripe, 8–12 px radii, softer shadow) as token overrides under `body.theme-marina` in
+  `styles.css`; only base tokens differ (semantic colours shared). Plus Jakarta Sans added in
+  `index.html`.
+- **Theme switch** — `App` gained a `theme` signal (`regatta`/`marina`) persisted to
+  `localStorage` and applied to `<body>` via an `effect`; a toggle button sits in the header.
+
+Verified: `npm run build` clean, `npx ng test --watch=false` → 15 tests green.
+`doc/functional.md`, `doc/technical.md`, `CLAUDE.md` updated.

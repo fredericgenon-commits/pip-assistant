@@ -30,7 +30,7 @@ export class PipNewDialog {
       return this.serverError();
     }
     if (this.touched() && this.code.invalid) {
-      return 'Format invalide — attendu yy_PIP_n (ex. 26_PIP_3).';
+      return 'Invalid format — expected yy_PIP_n (e.g. 26_PIP_3).';
     }
     return null;
   });
@@ -56,11 +56,11 @@ export class PipNewDialog {
       error: (err: HttpErrorResponse) => {
         this.saving.set(false);
         if (err.status === 409) {
-          this.serverError.set('Ce nom de PIP existe déjà.');
+          this.serverError.set('A PIP with this name already exists.');
         } else if (err.status === 400) {
-          this.serverError.set('Format invalide — attendu yy_PIP_n (ex. 26_PIP_3).');
+          this.serverError.set('Invalid format — expected yy_PIP_n (e.g. 26_PIP_3).');
         } else {
-          this.serverError.set('Erreur inattendue, veuillez réessayer.');
+          this.serverError.set('Unexpected error, please try again.');
         }
       }
     });

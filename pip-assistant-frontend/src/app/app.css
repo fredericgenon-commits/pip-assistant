@@ -65,11 +65,33 @@
   opacity: 1;
 }
 
-.appbar__user {
+.appbar__right {
   margin-left: auto;
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.appbar__theme {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  color: inherit;
+  border: 1px solid currentColor;
+  opacity: 0.8;
+  border-radius: var(--radius-sm);
+  padding: 6px 11px;
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.appbar__theme:hover {
+  opacity: 1;
+}
+.appbar__theme .material-icons {
+  font-size: 16px;
 }
 
 .appbar__role {

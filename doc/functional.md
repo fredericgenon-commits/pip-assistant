@@ -275,25 +275,32 @@ flowchart LR
     P --> R["refreshed grid: Priority + PIP status"]
 ```
 
-## Visual design (Regatta theme)
+## Visual design (Regatta & Marina themes)
 
-The two screens were re-skinned to the **"Regatta"** design direction from the design
-hand-off (`PIP Assistant.dc.html`). The interface copy is **French** (the hand-off marks
-the FR copy as definitive); code identifiers stay English.
+The two screens were re-skinned to the design hand-off (`PIP Assistant.dc.html`). The
+interface copy is **English**; the hand-off's two visual directions are both implemented and
+switchable at runtime via a **theme toggle** in the header bar:
 
-- **App shell** — a coloured header bar (logo `P`, wordmark, nav `PIPs / Imports / Équipes /
-  Paramètres`, "Scrum Master" + avatar) over a 4 px tricolour stripe; content centred at
+- **Regatta** (default) — warm, retro-sporty: terracotta primary, tricolour 4 px stripe,
+  Space Grotesk / DM Sans, 4–8 px radii.
+- **Marina** — modern & structured: navy primary, flat 2 px stripe, Plus Jakarta Sans,
+  8–12 px radii, softer shadows.
+
+The choice is persisted in `localStorage`; only base tokens differ between directions, so
+the layout and the semantic status colours stay identical.
+
+- **App shell** — a coloured header bar (logo `P`, wordmark, nav `PIPs / Imports / Teams /
+  Settings`, theme toggle, "Scrum Master" + avatar) over the stripe; content centred at
   `1340 px`.
-- **PIP list** — title + subtitle, toolbar (year filter, *Rafraîchir*, *+ Nouveau PIP*),
-  card table with status badges and an *Ouvrir ›* action, "Période" column (shows
-  *À planifier* until PIP dates are captured). New-PIP dialog restyled (mono input, hint,
-  French validation).
-- **PIP detail** — breadcrumb, title + status badge, team selector + *Enregistrer* (toggles
-  to *Enregistré ✓*), three summary cards (Exigences, Projets TCM, Charge / Capacité with
-  red over-capacity), restyled drag-&-drop import zone, the six-status diff legend, and the
-  requirements grid with a grouped super-header (*Exigences* / *Charge par équipe (SP)*),
+- **PIP list** — title + subtitle, toolbar (year filter, *Refresh*, *+ New PIP*), card table
+  with status badges and an *Open ›* action, "Period" column (shows *To be scheduled* until
+  PIP dates are captured). New-PIP dialog restyled (mono input, hint, validation).
+- **PIP detail** — breadcrumb, title + status badge, team selector + *Save* (toggles to
+  *Saved ✓*), three summary cards (Requirements, Projects TCM, Load / Capacity with red
+  over-capacity), restyled drag-&-drop import zone, the six-status diff legend, and the
+  requirements grid with a grouped super-header (*Requirements* / *Load per team (SP)*),
   per-status row colours, badge-styled REQ status select, and red Total/Capacity figures on
   over-capacity.
 
 Status colours (PIP `PREPARATION/ACTIVE/CLOSED`, REQ `TODO/IN_PROGRESS/DONE`, and the six
-import-diff states) are theme tokens shared by both screens.
+import-diff states) are theme tokens shared by both screens and both directions.

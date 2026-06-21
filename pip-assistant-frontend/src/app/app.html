@@ -6,10 +6,14 @@
   <nav class="appbar__nav">
     <a class="appbar__nav-item appbar__nav-item--active" routerLink="/pips">PIPs</a>
     <span class="appbar__nav-item">Imports</span>
-    <span class="appbar__nav-item">Équipes</span>
-    <span class="appbar__nav-item">Paramètres</span>
+    <span class="appbar__nav-item">Teams</span>
+    <span class="appbar__nav-item">Settings</span>
   </nav>
-  <div class="appbar__user">
+  <div class="appbar__right">
+    <button type="button" class="appbar__theme" title="Switch theme" (click)="toggleTheme()">
+      <span class="material-icons">palette</span>
+      <span>{{ themeLabel() }}</span>
+    </button>
     <span class="appbar__role">Scrum Master</span>
     <span class="appbar__avatar">SM</span>
   </div>

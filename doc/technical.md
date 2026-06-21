@@ -298,16 +298,21 @@ in the git-ignored `test-data/` directory. See the skill's `SKILL.md` for all op
 - PIP detail enhancements (status/date editing), OpenAPI, status-admin screen.
 - Integrations: GitLab REST API v4, JIRA REST API, XLDeploy REST API.
 
-## Frontend theming (Regatta design)
+## Frontend theming (Regatta & Marina)
 
 The design hand-off (`PIP Assistant.dc.html`, imported via the Claude Design connector) is a
 visual reference, not production code; the two screens were recreated with the existing
-Angular + Material stack.
+Angular + Material stack. UI copy is English.
 
-- **Tokens** — the "Regatta" palette/typography/density is exposed as CSS custom properties
-  on `:root` in `src/styles.css`, alongside shared classes (`.page`, `.card`, `.btn`,
-  `.badge`, `.field`, `.note`) and the semantic status/diff colour variables. Fonts
-  (Space Grotesk / DM Sans / IBM Plex Mono) are loaded in `index.html`.
+- **Tokens & themes** — base palette/typography/density tokens are CSS custom properties:
+  the default **Regatta** set on `:root`, and the **Marina** set under `body.theme-marina`
+  (overrides only the base tokens — shared classes `.page`, `.card`, `.btn`, `.badge`,
+  `.field`, `.note` and the semantic status/diff colours are direction-agnostic) in
+  `src/styles.css`. Fonts (Space Grotesk / DM Sans / Plus Jakarta Sans / IBM Plex Mono) are
+  loaded in `index.html`.
+- **Theme switch** — `App` holds a `theme` signal (`regatta`/`marina`), persisted to
+  `localStorage` and applied via a `theme-marina` class on `<body>` through an `effect`; the
+  header bar exposes a toggle button.
 - **App shell** — `App` renders the header bar + stripe (`app.html` / `app.css`); the
   `mat-toolbar` was removed.
 - **List / detail / dialog** — native themed controls replace most `mat-button` /
@@ -318,4 +323,4 @@ Angular + Material stack.
   (`panelClass: pip-dialog-panel`, surface padding reset globally).
 - No business logic moved to the client: totals, counts, over-capacity flags and the period
   placeholder are presentation-only; `PipResponse` still omits dates (period shows
-  *À planifier*).
+  *To be scheduled*).

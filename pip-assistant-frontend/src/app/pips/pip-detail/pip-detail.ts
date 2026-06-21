@@ -25,12 +25,12 @@ const REMOVED_FROM_PIP = 'REMOVED_FROM_PIP';
 
 /** Display labels for the backend PIP status names (presentation only). */
 const PIP_STATUS_LABELS: Record<string, string> = {
-  NEW: 'Nouveau',
-  UNCHANGED: 'Inchangé',
-  CHANGED: 'Modifié',
-  PRIORITY_CHANGED: 'Priorité modifiée',
-  REMOVED_FROM_PIP: 'Retiré du PIP',
-  MISSING_DATA: 'Donnée manquante'
+  NEW: 'New',
+  UNCHANGED: 'Unchanged',
+  CHANGED: 'Changed',
+  PRIORITY_CHANGED: 'Priority changed',
+  REMOVED_FROM_PIP: 'Removed from PIP',
+  MISSING_DATA: 'Missing data'
 };
 
 /** Maps a backend PIP status to the theme key used for row/dot colouring. */
@@ -218,7 +218,7 @@ export class PipDetail implements AfterViewInit {
   private acceptFile(file: File): void {
     if (!file.name.toLowerCase().endsWith('.xlsx')) {
       this.droppedFile.set(null);
-      this.toast('Seuls les fichiers .xlsx peuvent être importés.');
+      this.toast('Only .xlsx files can be imported.');
       return;
     }
     this.droppedFile.set(file);
@@ -235,11 +235,11 @@ export class PipDetail implements AfterViewInit {
         this.apply(detail);
         this.droppedFile.set(null);
         this.importing.set(false);
-        this.toast('Import terminé.');
+        this.toast('Import done.');
       },
       error: (err) => {
         this.importing.set(false);
-        this.toast(err?.error?.message ?? "Le fichier n'a pas pu être importé.");
+        this.toast(err?.error?.message ?? 'The file could not be imported.');
       }
     });
   }
@@ -250,9 +250,9 @@ export class PipDetail implements AfterViewInit {
 
   protected saveLabel(): string {
     if (this.saving()) {
-      return 'Enregistrement…';
+      return 'Saving…';
     }
-    return this.saved() ? 'Enregistré ✓' : 'Enregistrer';
+    return this.saved() ? 'Saved ✓' : 'Save';
   }
 
   protected save(): void {

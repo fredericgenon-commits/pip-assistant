@@ -2,19 +2,19 @@
   <div>
     <h1 class="h-title list-title">PIPs</h1>
     <p class="list-subtitle">
-      Préparez le backlog du prochain Projects Increment Plan — cycle de 7 semaines, 3 sprints
-      puis une semaine de préparation.
+      Prepare the backlog for the next Projects Increment Plan — a 7-week cycle: 3 sprints
+      then one preparation week.
     </p>
   </div>
   <div class="list-toolbar">
     <select class="field" [(ngModel)]="selectedYear" (ngModelChange)="refresh()">
-      <option [ngValue]="'ALL'">Toutes les années</option>
+      <option [ngValue]="'ALL'">All years</option>
       @for (year of years(); track year) {
         <option [ngValue]="year">{{ year }}</option>
       }
     </select>
-    <button type="button" class="btn btn--ghost" (click)="refresh()">Rafraîchir</button>
-    <button type="button" class="btn btn--primary" (click)="openNew()">+ Nouveau PIP</button>
+    <button type="button" class="btn btn--ghost" (click)="refresh()">Refresh</button>
+    <button type="button" class="btn btn--primary" (click)="openNew()">+ New PIP</button>
   </div>
 </div>
 
@@ -22,9 +22,9 @@
   <table class="list-table">
     <thead>
       <tr>
-        <th>Nom du PIP</th>
-        <th>Statut</th>
-        <th>Période</th>
+        <th>PIP name</th>
+        <th>Status</th>
+        <th>Period</th>
         <th class="ta-right"></th>
       </tr>
     </thead>
@@ -35,7 +35,7 @@
           <td><span class="badge badge--{{ pip.status }}">{{ pip.status }}</span></td>
           <td class="cell-muted">{{ period(pip) }}</td>
           <td class="ta-right">
-            <span class="cell-open" (click)="open(pip)">Ouvrir ›</span>
+            <span class="cell-open" (click)="open(pip)">Open ›</span>
           </td>
         </tr>
       }
@@ -43,8 +43,8 @@
   </table>
 
   @if (pips().length === 0) {
-    <p class="list-empty">Aucun PIP pour l'instant. Cliquez « + Nouveau PIP » pour créer le premier.</p>
+    <p class="list-empty">No PIP yet. Click “+ New PIP” to create the first one.</p>
   }
 </div>
 
-<p class="note">Double-cliquez une ligne pour ouvrir le détail du PIP. Tri par nom décroissant.</p>
+<p class="note">Double-click a row to open the PIP detail. Sorted by name, descending.</p>

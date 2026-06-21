@@ -51,7 +51,7 @@ export class PipList {
 
   /** Dates are not captured yet; display a placeholder until they are. */
   protected period(_pip: Pip): string {
-    return 'À planifier';
+    return 'To be scheduled';
   }
 
   private loadYears(): void {

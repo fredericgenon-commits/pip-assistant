@@ -49,6 +49,6 @@ describe('PipList', () => {
     flushInitialLoad([]);
     fixture.detectChanges();
 
-    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Aucun PIP');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('No PIP yet');
   });
 });

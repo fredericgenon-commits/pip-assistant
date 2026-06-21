@@ -1,9 +1,9 @@
 <div class="dialog">
   <div class="dialog__body">
-    <h2 class="h-title dialog__title">Nouveau PIP</h2>
-    <p class="dialog__subtitle">Le code suivant est suggéré automatiquement.</p>
+    <h2 class="h-title dialog__title">New PIP</h2>
+    <p class="dialog__subtitle">The next code is suggested automatically.</p>
 
-    <label class="dialog__label" for="pip-name">Nom du PIP</label>
+    <label class="dialog__label" for="pip-name">PIP name</label>
     <input
       id="pip-name"
       class="dialog__input"
@@ -18,15 +18,15 @@
       <p class="dialog__error">{{ message }}</p>
     } @else {
       <p class="dialog__hint">
-        Format <span class="mono">yy_PIP_n</span> · le numéro est comparé numériquement.
+        Format <span class="mono">yy_PIP_n</span> · the number is compared numerically.
       </p>
     }
   </div>
 
   <div class="dialog__footer">
-    <button type="button" class="btn btn--ghost" (click)="cancel()">Annuler</button>
+    <button type="button" class="btn btn--ghost" (click)="cancel()">Cancel</button>
     <button type="button" class="btn btn--primary" [disabled]="saving()" (click)="save()">
-      Enregistrer
+      Save
     </button>
   </div>
 </div>

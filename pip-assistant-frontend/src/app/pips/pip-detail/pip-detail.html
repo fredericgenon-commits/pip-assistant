@@ -1,6 +1,6 @@
 <div class="detail-head">
   <div>
-    <a class="breadcrumb" routerLink="/pips">‹ PIPs &nbsp;·&nbsp; DÉTAILS DU PIP</a>
+    <a class="breadcrumb" routerLink="/pips">‹ PIPs &nbsp;·&nbsp; PIP DETAILS</a>
     @if (pip(); as p) {
       <div class="detail-title-row">
         <h1 class="h-title detail-title">{{ p.code }}</h1>
@@ -9,7 +9,7 @@
     }
   </div>
   <div class="detail-actions">
-    <label class="team-label" for="team-select">Commentaire équipe</label>
+    <label class="team-label" for="team-select">Team comment</label>
     <select
       id="team-select"
       class="field"
@@ -29,15 +29,15 @@
 <!-- Summary cards -->
 <div class="summary">
   <div class="card summary-card">
-    <span class="summary-card__label">Exigences</span>
+    <span class="summary-card__label">Requirements</span>
     <span class="summary-card__value">{{ reqCount() }}</span>
   </div>
   <div class="card summary-card">
-    <span class="summary-card__label">Projets (TCM)</span>
+    <span class="summary-card__label">Projects (TCM)</span>
     <span class="summary-card__value">{{ tcmCount() }}</span>
   </div>
   <div class="card summary-card">
-    <span class="summary-card__label">Charge / Capacité</span>
+    <span class="summary-card__label">Load / Capacity</span>
     <span class="summary-card__value" [class.over]="loadOver()">
       {{ totalLoad() }} <span class="summary-card__unit">/ {{ totalCap() }} SP</span>
     </span>
@@ -50,11 +50,11 @@
     <span class="dropzone__icon material-icons">file_upload</span>
     <div class="dropzone__text">
       @if (droppedFile(); as f) {
-        <div class="dropzone__title">Prêt à importer : <span class="mono">{{ f.name }}</span></div>
-        <div class="dropzone__hint">Cliquez « Importer ce fichier » pour lancer l'import.</div>
+        <div class="dropzone__title">Ready to import: <span class="mono">{{ f.name }}</span></div>
+        <div class="dropzone__hint">Click “Import this file” to start the import.</div>
       } @else {
-        <div class="dropzone__title">Glissez le fichier <span class="mono">.xlsx</span> du PM ici</div>
-        <div class="dropzone__hint">Un nouveau dépôt remplace le précédent. Format Excel uniquement.</div>
+        <div class="dropzone__title">Drop the PM <span class="mono">.xlsx</span> file here</div>
+        <div class="dropzone__hint">A new drop replaces the previous one. Excel format only.</div>
       }
     </div>
     <button
@@ -63,7 +63,7 @@
       [disabled]="!droppedFile() || importing()"
       (click)="$event.stopPropagation(); importFile()"
     >
-      Importer ce fichier
+      Import this file
     </button>
     <input #fileInput type="file" accept=".xlsx" class="hidden" (change)="onFilePicked($event)" />
   </div>
@@ -71,13 +71,13 @@
 
 <!-- Diff legend -->
 <div class="legend">
-  <span class="legend__title">Statut PIP (diff)</span>
-  <span class="legend__item"><span class="dot dot--new"></span>Nouveau</span>
-  <span class="legend__item"><span class="dot dot--unchanged"></span>Inchangé</span>
-  <span class="legend__item"><span class="dot dot--priority"></span>Priorité modifiée</span>
-  <span class="legend__item"><span class="dot dot--changed"></span>Modifié</span>
-  <span class="legend__item"><span class="dot dot--removed"></span>Retiré du PIP</span>
-  <span class="legend__item"><span class="dot dot--missing"></span>Donnée manquante</span>
+  <span class="legend__title">PIP status (diff)</span>
+  <span class="legend__item"><span class="dot dot--new"></span>New</span>
+  <span class="legend__item"><span class="dot dot--unchanged"></span>Unchanged</span>
+  <span class="legend__item"><span class="dot dot--priority"></span>Priority changed</span>
+  <span class="legend__item"><span class="dot dot--changed"></span>Changed</span>
+  <span class="legend__item"><span class="dot dot--removed"></span>Removed from PIP</span>
+  <span class="legend__item"><span class="dot dot--missing"></span>Missing data</span>
 </div>
 
 <div class="card grid-card">
@@ -85,11 +85,11 @@
          [dataSource]="dataSource" class="pip-grid">
     <!-- Grouped super-header -->
     <ng-container matColumnDef="groupReq">
-      <th mat-header-cell *matHeaderCellDef [attr.colspan]="9" class="grp grp--req">Exigences</th>
+      <th mat-header-cell *matHeaderCellDef [attr.colspan]="9" class="grp grp--req">Requirements</th>
     </ng-container>
     <ng-container matColumnDef="groupLoad">
       <th mat-header-cell *matHeaderCellDef [attr.colspan]="teams().length" class="grp grp--load">
-        Charge par équipe (SP)
+        Load per team (SP)
       </th>
     </ng-container>
 
@@ -101,7 +101,7 @@
 
     <!-- Diff-derived PIP status (read-only) -->
     <ng-container matColumnDef="pipStatus">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Statut PIP</th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>PIP status</th>
       <td mat-cell *matCellDef="let row">
         <span class="pipstatus">
           <span class="dot dot--{{ pipStatusKey(row.pipStatus) }}"></span>{{ pipStatusLabel(row.pipStatus) }}
@@ -116,7 +116,7 @@
     </ng-container>
 
     <ng-container matColumnDef="tcmDescription">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Description TCM</th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>TCM description</th>
       <td mat-cell *matCellDef="let row">
         <input class="cell-input" [ngModel]="row.tcmDescription" [disabled]="isRemoved(row)"
                (ngModelChange)="row.tcmDescription = $event; markDirty()" />
@@ -129,7 +129,7 @@
     </ng-container>
 
     <ng-container matColumnDef="description">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Description REQ</th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>REQ description</th>
       <td mat-cell *matCellDef="let row">
         <input class="cell-input strong" [ngModel]="row.description" [disabled]="isRemoved(row)"
                (ngModelChange)="row.description = $event; markDirty()" />
@@ -137,7 +137,7 @@
     </ng-container>
 
     <ng-container matColumnDef="status">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Statut</th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
       <td mat-cell *matCellDef="let row">
         <select class="req-badge" [ngClass]="'req-badge--' + row.status" [ngModel]="row.status"
                 [disabled]="isRemoved(row)" (ngModelChange)="row.status = $event; markDirty()">
@@ -150,7 +150,7 @@
     </ng-container>
 
     <ng-container matColumnDef="pmComment">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Comm. PM</th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>PM comment</th>
       <td mat-cell *matCellDef="let row">
         <input class="cell-input muted" [ngModel]="row.pmComment" [disabled]="isRemoved(row)"
                (ngModelChange)="row.pmComment = $event; markDirty()" />
@@ -158,7 +158,7 @@
     </ng-container>
 
     <ng-container matColumnDef="devComment">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Comm. Dev · {{ selectedTeamName() }}</th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Dev comment · {{ selectedTeamName() }}</th>
       <td mat-cell *matCellDef="let row">
         @if (selectedTeamId(); as teamId) {
           <input class="cell-input muted" placeholder="—" [ngModel]="row.comments[teamId]"
@@ -196,7 +196,7 @@
       <td mat-footer-cell *matFooterCellDef [attr.colspan]="9" class="ta-right foot-label">Total (SP)</td>
     </ng-container>
     <ng-container matColumnDef="capLabel">
-      <td mat-footer-cell *matFooterCellDef [attr.colspan]="9" class="ta-right foot-label muted">Capacité (SP)</td>
+      <td mat-footer-cell *matFooterCellDef [attr.colspan]="9" class="ta-right foot-label muted">Capacity (SP)</td>
     </ng-container>
 
     <tr mat-header-row *matHeaderRowDef="groupColumns" class="group-row"></tr>
@@ -209,12 +209,12 @@
 
   @if (pip() && dataSource.data.length === 0) {
     <p class="list-empty">
-      Aucune exigence pour ce PIP. Déposez un fichier de planning .xlsx ci-dessus pour les importer.
+      No requirement yet for this PIP. Drop a planning .xlsx above to import them.
     </p>
   }
 </div>
 
 <p class="note">
-  Toutes les cellules sont éditables sauf les clés TCM et REQ. Les charges éditées manuellement
-  deviennent des surcharges que les imports suivants n'écrasent pas. Cliquez un en-tête pour trier.
+  All cells are editable except the TCM and REQ keys. Workloads edited by hand become manual
+  overrides that later imports do not overwrite. Click a header to sort.
 </p>
