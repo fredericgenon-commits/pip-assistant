@@ -118,3 +118,8 @@ next number. Keep this history up to date as part of finishing a task.
   (NEW/UNCHANGED/CHANGED/PRIORITY_CHANGED/REMOVED_FROM_PIP/MISSING_DATA), manual workload
   edits preserved across re-imports. Test fixtures via the `generate-test-excel` skill.
   Future (Slice 2): version history viewer + rollback. Then status/date editing, integrations.
+- **UI design** (Regatta theme): complete. Both screens re-skinned to the design hand-off
+  (`PIP Assistant.dc.html`, imported via the Claude Design connector) — French UI copy,
+  app shell header + stripe, Regatta tokens as CSS variables (`styles.css`), summary cards,
+  diff legend, grouped-header grid. Frontend-only; no business logic moved client-side.
+  `Période` shows "À planifier" (PIP dates not captured yet).

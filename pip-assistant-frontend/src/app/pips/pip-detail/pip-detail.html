@@ -1,162 +1,220 @@
-<h1 class="text-2xl font-semibold mb-1">PIP Details</h1>
-
-@if (pip(); as p) {
-  <div class="flex items-center gap-6 mb-4 text-slate-700">
-    <span><span class="font-medium">Name:</span> {{ p.code }}</span>
-    <span><span class="font-medium">Status:</span> {{ p.status }}</span>
+<div class="detail-head">
+  <div>
+    <a class="breadcrumb" routerLink="/pips">‹ PIPs &nbsp;·&nbsp; DÉTAILS DU PIP</a>
+    @if (pip(); as p) {
+      <div class="detail-title-row">
+        <h1 class="h-title detail-title">{{ p.code }}</h1>
+        <span class="badge badge--{{ p.status }}">{{ p.status }}</span>
+      </div>
+    }
   </div>
-}
+  <div class="detail-actions">
+    <label class="team-label" for="team-select">Commentaire équipe</label>
+    <select
+      id="team-select"
+      class="field"
+      [ngModel]="selectedTeamId()"
+      (ngModelChange)="selectedTeamId.set($event)"
+    >
+      @for (team of teams(); track team.id) {
+        <option [ngValue]="team.id">{{ team.name }}</option>
+      }
+    </select>
+    <button type="button" class="btn btn--primary" [disabled]="!dirty() || saving()" (click)="save()">
+      {{ saveLabel() }}
+    </button>
+  </div>
+</div>
+
+<!-- Summary cards -->
+<div class="summary">
+  <div class="card summary-card">
+    <span class="summary-card__label">Exigences</span>
+    <span class="summary-card__value">{{ reqCount() }}</span>
+  </div>
+  <div class="card summary-card">
+    <span class="summary-card__label">Projets (TCM)</span>
+    <span class="summary-card__value">{{ tcmCount() }}</span>
+  </div>
+  <div class="card summary-card">
+    <span class="summary-card__label">Charge / Capacité</span>
+    <span class="summary-card__value" [class.over]="loadOver()">
+      {{ totalLoad() }} <span class="summary-card__unit">/ {{ totalCap() }} SP</span>
+    </span>
+  </div>
+</div>
 
 <!-- Excel import drop zone -->
-<div class="mb-4">
-  <div class="dropzone" (dragover)="onDragOver($event)" (drop)="onDrop($event)"
-       (click)="fileInput.click()">
-    @if (droppedFile(); as f) {
-      <span class="text-slate-700"><span class="font-medium">Ready to import:</span> {{ f.name }}</span>
-    } @else {
-      <span class="text-slate-500">Drag &amp; drop a .xlsx planning file here, or click to choose one.</span>
-    }
+<div class="import-zone">
+  <div class="dropzone" (dragover)="onDragOver($event)" (drop)="onDrop($event)" (click)="fileInput.click()">
+    <span class="dropzone__icon material-icons">file_upload</span>
+    <div class="dropzone__text">
+      @if (droppedFile(); as f) {
+        <div class="dropzone__title">Prêt à importer : <span class="mono">{{ f.name }}</span></div>
+        <div class="dropzone__hint">Cliquez « Importer ce fichier » pour lancer l'import.</div>
+      } @else {
+        <div class="dropzone__title">Glissez le fichier <span class="mono">.xlsx</span> du PM ici</div>
+        <div class="dropzone__hint">Un nouveau dépôt remplace le précédent. Format Excel uniquement.</div>
+      }
+    </div>
+    <button
+      type="button"
+      class="btn btn--primary"
+      [disabled]="!droppedFile() || importing()"
+      (click)="$event.stopPropagation(); importFile()"
+    >
+      Importer ce fichier
+    </button>
     <input #fileInput type="file" accept=".xlsx" class="hidden" (change)="onFilePicked($event)" />
   </div>
-  <button mat-flat-button color="primary" class="mt-2"
-          [disabled]="!droppedFile() || importing()" (click)="importFile()">
-    Import this file
-  </button>
 </div>
 
-<div class="flex items-end gap-4 mb-4">
-  <mat-form-field appearance="outline" class="w-48">
-    <mat-label>Team (Dev comment)</mat-label>
-    <mat-select [ngModel]="selectedTeamId()" (ngModelChange)="selectedTeamId.set($event)">
-      @for (team of teams(); track team.id) {
-        <mat-option [value]="team.id">{{ team.name }}</mat-option>
-      }
-    </mat-select>
-  </mat-form-field>
-
-  <button mat-flat-button color="primary" [disabled]="!dirty() || saving()" (click)="save()">Save</button>
-  <a mat-stroked-button routerLink="/pips">Back</a>
-  @if (dirty()) { <span class="text-amber-600 text-sm">Unsaved changes</span> }
+<!-- Diff legend -->
+<div class="legend">
+  <span class="legend__title">Statut PIP (diff)</span>
+  <span class="legend__item"><span class="dot dot--new"></span>Nouveau</span>
+  <span class="legend__item"><span class="dot dot--unchanged"></span>Inchangé</span>
+  <span class="legend__item"><span class="dot dot--priority"></span>Priorité modifiée</span>
+  <span class="legend__item"><span class="dot dot--changed"></span>Modifié</span>
+  <span class="legend__item"><span class="dot dot--removed"></span>Retiré du PIP</span>
+  <span class="legend__item"><span class="dot dot--missing"></span>Donnée manquante</span>
 </div>
 
-<div class="overflow-x-auto">
+<div class="card grid-card">
   <table mat-table matSort matSortActive="priority" matSortDirection="asc"
          [dataSource]="dataSource" class="pip-grid">
+    <!-- Grouped super-header -->
+    <ng-container matColumnDef="groupReq">
+      <th mat-header-cell *matHeaderCellDef [attr.colspan]="9" class="grp grp--req">Exigences</th>
+    </ng-container>
+    <ng-container matColumnDef="groupLoad">
+      <th mat-header-cell *matHeaderCellDef [attr.colspan]="teams().length" class="grp grp--load">
+        Charge par équipe (SP)
+      </th>
+    </ng-container>
+
     <!-- Priority (read-only, default sort) -->
     <ng-container matColumnDef="priority">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Priority</th>
-      <td mat-cell *matCellDef="let row">{{ row.priority }}</td>
-      <td mat-footer-cell *matFooterCellDef class="font-semibold">Total</td>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header class="ta-center">Prio</th>
+      <td mat-cell *matCellDef="let row" class="ta-center mono key">{{ isRemoved(row) ? '—' : row.priority }}</td>
+    </ng-container>
+
+    <!-- Diff-derived PIP status (read-only) -->
+    <ng-container matColumnDef="pipStatus">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Statut PIP</th>
+      <td mat-cell *matCellDef="let row">
+        <span class="pipstatus">
+          <span class="dot dot--{{ pipStatusKey(row.pipStatus) }}"></span>{{ pipStatusLabel(row.pipStatus) }}
+        </span>
+      </td>
     </ng-container>
 
     <!-- Read-only key columns -->
     <ng-container matColumnDef="tcmKey">
       <th mat-header-cell *matHeaderCellDef mat-sort-header>TCM</th>
-      <td mat-cell *matCellDef="let row">{{ row.tcmKey }}</td>
-      <td mat-footer-cell *matFooterCellDef></td>
+      <td mat-cell *matCellDef="let row" class="mono key">{{ row.tcmKey }}</td>
     </ng-container>
 
     <ng-container matColumnDef="tcmDescription">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>TCM description</th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Description TCM</th>
       <td mat-cell *matCellDef="let row">
-        <input class="cell-input" [ngModel]="row.tcmDescription"
+        <input class="cell-input" [ngModel]="row.tcmDescription" [disabled]="isRemoved(row)"
                (ngModelChange)="row.tcmDescription = $event; markDirty()" />
       </td>
-      <td mat-footer-cell *matFooterCellDef></td>
     </ng-container>
 
     <ng-container matColumnDef="reqKey">
       <th mat-header-cell *matHeaderCellDef mat-sort-header>REQ</th>
-      <td mat-cell *matCellDef="let row">{{ row.reqKey }}</td>
-      <td mat-footer-cell *matFooterCellDef></td>
+      <td mat-cell *matCellDef="let row" class="mono key strong">{{ row.reqKey }}</td>
     </ng-container>
 
     <ng-container matColumnDef="description">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>REQ description</th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Description REQ</th>
       <td mat-cell *matCellDef="let row">
-        <input class="cell-input" [ngModel]="row.description"
+        <input class="cell-input strong" [ngModel]="row.description" [disabled]="isRemoved(row)"
                (ngModelChange)="row.description = $event; markDirty()" />
       </td>
-      <td mat-footer-cell *matFooterCellDef></td>
     </ng-container>
 
     <ng-container matColumnDef="status">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>REQ status</th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Statut</th>
       <td mat-cell *matCellDef="let row">
-        <select class="cell-input" [ngModel]="row.status"
-                (ngModelChange)="row.status = $event; markDirty()">
+        <select class="req-badge" [ngClass]="'req-badge--' + row.status" [ngModel]="row.status"
+                [disabled]="isRemoved(row)" (ngModelChange)="row.status = $event; markDirty()">
           <option value=""></option>
           @for (s of statuses(); track s) {
             <option [value]="s">{{ s }}</option>
           }
         </select>
       </td>
-      <td mat-footer-cell *matFooterCellDef></td>
     </ng-container>
 
     <ng-container matColumnDef="pmComment">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>PM comment</th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Comm. PM</th>
       <td mat-cell *matCellDef="let row">
-        <input class="cell-input" [ngModel]="row.pmComment"
+        <input class="cell-input muted" [ngModel]="row.pmComment" [disabled]="isRemoved(row)"
                (ngModelChange)="row.pmComment = $event; markDirty()" />
       </td>
-      <td mat-footer-cell *matFooterCellDef></td>
     </ng-container>
 
     <ng-container matColumnDef="devComment">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Dev comment</th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Comm. Dev · {{ selectedTeamName() }}</th>
       <td mat-cell *matCellDef="let row">
         @if (selectedTeamId(); as teamId) {
-          <input class="cell-input" [ngModel]="row.comments[teamId]"
+          <input class="cell-input muted" placeholder="—" [ngModel]="row.comments[teamId]"
+                 [disabled]="isRemoved(row)"
                  (ngModelChange)="row.comments[teamId] = $event; markDirty()" />
         }
       </td>
-      <td mat-footer-cell *matFooterCellDef></td>
-    </ng-container>
-
-    <!-- Diff-derived PIP status (read-only) -->
-    <ng-container matColumnDef="pipStatus">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>PIP status</th>
-      <td mat-cell *matCellDef="let row">{{ pipStatusLabel(row.pipStatus) }}</td>
-      <td mat-footer-cell *matFooterCellDef></td>
     </ng-container>
 
     <!-- One workload column per team -->
     @for (team of teams(); track team.id) {
       <ng-container [matColumnDef]="'team_' + team.id">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ team.name }}</th>
-        <td mat-cell *matCellDef="let row">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header class="ta-center team-col">{{ team.name }}</th>
+        <td mat-cell *matCellDef="let row" class="ta-center team-col">
           <input class="cell-input num" type="number" step="0.5" [ngModel]="row.workloads[team.id]"
+                 [disabled]="isRemoved(row)"
                  (ngModelChange)="row.workloads[team.id] = $event; markDirty()" />
         </td>
-        <td mat-footer-cell *matFooterCellDef class="font-semibold">{{ total(team.id) }}</td>
+        <td mat-footer-cell *matFooterCellDef class="ta-center team-col mono total-cell"
+            [class.over]="teamOver(team.id)">{{ total(team.id) }}</td>
       </ng-container>
 
       <!-- Capacity footer cell for this team (second footer row) -->
       <ng-container [matColumnDef]="'capTeam_' + team.id">
-        <td mat-footer-cell *matFooterCellDef>
-          <input class="cell-input num" type="number" step="0.5" [ngModel]="capacities()[team.id]"
+        <td mat-footer-cell *matFooterCellDef class="ta-center team-col">
+          <input class="cell-input num cap" type="number" step="0.5" [ngModel]="capacities()[team.id]"
+                 [class.over]="teamOver(team.id)"
                  (ngModelChange)="setCapacity(team.id, $event)" />
         </td>
       </ng-container>
     }
 
-    <!-- Capacity row label spanning the non-team columns -->
+    <!-- Footer labels spanning the non-team columns -->
+    <ng-container matColumnDef="totalLabel">
+      <td mat-footer-cell *matFooterCellDef [attr.colspan]="9" class="ta-right foot-label">Total (SP)</td>
+    </ng-container>
     <ng-container matColumnDef="capLabel">
-      <td mat-footer-cell *matFooterCellDef [attr.colspan]="9" class="font-semibold">Capacity</td>
+      <td mat-footer-cell *matFooterCellDef [attr.colspan]="9" class="ta-right foot-label muted">Capacité (SP)</td>
     </ng-container>
 
+    <tr mat-header-row *matHeaderRowDef="groupColumns" class="group-row"></tr>
     <tr mat-header-row *matHeaderRowDef="displayedColumns()"></tr>
     <tr mat-row *matRowDef="let row; columns: displayedColumns()"
-        [class.row-removed]="isRemoved(row)"
-        [class.row-missing]="row.pipStatus === 'MISSING_DATA'"></tr>
-    <tr mat-footer-row *matFooterRowDef="displayedColumns()"></tr>
-    <tr mat-footer-row *matFooterRowDef="capacityColumns()"></tr>
+        [ngClass]="'row--' + pipStatusKey(row.pipStatus)"></tr>
+    <tr mat-footer-row *matFooterRowDef="totalColumns()" class="total-row"></tr>
+    <tr mat-footer-row *matFooterRowDef="capacityColumns()" class="cap-row"></tr>
   </table>
+
+  @if (pip() && dataSource.data.length === 0) {
+    <p class="list-empty">
+      Aucune exigence pour ce PIP. Déposez un fichier de planning .xlsx ci-dessus pour les importer.
+    </p>
+  }
 </div>
 
-@if (pip() && dataSource.data.length === 0) {
-  <p class="text-slate-500 mt-4">
-    No requirement yet for this PIP. Drop a planning .xlsx above to import them.
-  </p>
-}
+<p class="note">
+  Toutes les cellules sont éditables sauf les clés TCM et REQ. Les charges éditées manuellement
+  deviennent des surcharges que les imports suivants n'écrasent pas. Cliquez un en-tête pour trier.
+</p>

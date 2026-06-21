@@ -74,7 +74,7 @@ describe('PipDetail', () => {
     fixture.detectChanges();
 
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
-    expect(text).toContain('PIP Details');
+    expect(text).toContain('DÉTAILS DU PIP');
     expect(text).toContain('26_PIP_1');
     expect(text).toContain('REQ-1');
     expect(fixture.componentInstance['total'](1)).toBe(3);

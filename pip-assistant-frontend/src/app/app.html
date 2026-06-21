@@ -1,4 +1,21 @@
-<mat-toolbar color="primary">PIP Assistant</mat-toolbar>
-<main class="p-6">
+<header class="appbar">
+  <a class="appbar__brand" routerLink="/pips">
+    <span class="appbar__logo">P</span>
+    <span class="appbar__wordmark">PIP Assistant</span>
+  </a>
+  <nav class="appbar__nav">
+    <a class="appbar__nav-item appbar__nav-item--active" routerLink="/pips">PIPs</a>
+    <span class="appbar__nav-item">Imports</span>
+    <span class="appbar__nav-item">Équipes</span>
+    <span class="appbar__nav-item">Paramètres</span>
+  </nav>
+  <div class="appbar__user">
+    <span class="appbar__role">Scrum Master</span>
+    <span class="appbar__avatar">SM</span>
+  </div>
+</header>
+<div class="appbar__stripe"></div>
+
+<main class="page">
   <router-outlet />
 </main>

@@ -1,22 +1,32 @@
-<h2 mat-dialog-title>New PIP</h2>
+<div class="dialog">
+  <div class="dialog__body">
+    <h2 class="h-title dialog__title">Nouveau PIP</h2>
+    <p class="dialog__subtitle">Le code suivant est suggéré automatiquement.</p>
 
-<mat-dialog-content>
-  <mat-form-field class="w-full">
-    <mat-label>PIP name</mat-label>
-    <input matInput [formControl]="code" placeholder="yy_PIP_n" autocomplete="off" />
-    @if (code.hasError('required')) {
-      <mat-error>PIP name is required.</mat-error>
-    } @else if (code.hasError('pattern')) {
-      <mat-error>Format must be yy_PIP_n (e.g. 26_PIP_1).</mat-error>
+    <label class="dialog__label" for="pip-name">Nom du PIP</label>
+    <input
+      id="pip-name"
+      class="dialog__input"
+      [class.error]="error()"
+      [formControl]="code"
+      (input)="onInput()"
+      placeholder="yy_PIP_n"
+      autocomplete="off"
+    />
+
+    @if (error(); as message) {
+      <p class="dialog__error">{{ message }}</p>
+    } @else {
+      <p class="dialog__hint">
+        Format <span class="mono">yy_PIP_n</span> · le numéro est comparé numériquement.
+      </p>
     }
-  </mat-form-field>
+  </div>
 
-  @if (serverError()) {
-    <p class="text-red-600 mt-1">{{ serverError() }}</p>
-  }
-</mat-dialog-content>
-
-<mat-dialog-actions align="end">
-  <button mat-button (click)="cancel()">Cancel</button>
-  <button mat-flat-button color="primary" [disabled]="saving()" (click)="save()">Save</button>
-</mat-dialog-actions>
+  <div class="dialog__footer">
+    <button type="button" class="btn btn--ghost" (click)="cancel()">Annuler</button>
+    <button type="button" class="btn btn--primary" [disabled]="saving()" (click)="save()">
+      Enregistrer
+    </button>
+  </div>
+</div>

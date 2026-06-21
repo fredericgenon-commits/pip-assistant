@@ -1,6 +1,6 @@
 #FileLock
-#Sun Jun 21 16:25:42 CEST 2026
+#Sun Jun 21 20:27:04 CEST 2026
 hostName=Sherka
-id=19eea929e430f317ffa1240e6cd2b1c7a5f3943c339
+id=19eeb6f981b40bff05b0bc6f642a76898a4919ffe61
 method=file
-server=10.5.0.2\:59550
+server=10.5.0.2\:64487

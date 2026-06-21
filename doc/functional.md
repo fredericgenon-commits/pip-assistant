@@ -274,3 +274,26 @@ flowchart LR
     B -->|POST /api/pips/:id/imports| P["parse → diff vs previous → store version"]
     P --> R["refreshed grid: Priority + PIP status"]
 ```
+
+## Visual design (Regatta theme)
+
+The two screens were re-skinned to the **"Regatta"** design direction from the design
+hand-off (`PIP Assistant.dc.html`). The interface copy is **French** (the hand-off marks
+the FR copy as definitive); code identifiers stay English.
+
+- **App shell** — a coloured header bar (logo `P`, wordmark, nav `PIPs / Imports / Équipes /
+  Paramètres`, "Scrum Master" + avatar) over a 4 px tricolour stripe; content centred at
+  `1340 px`.
+- **PIP list** — title + subtitle, toolbar (year filter, *Rafraîchir*, *+ Nouveau PIP*),
+  card table with status badges and an *Ouvrir ›* action, "Période" column (shows
+  *À planifier* until PIP dates are captured). New-PIP dialog restyled (mono input, hint,
+  French validation).
+- **PIP detail** — breadcrumb, title + status badge, team selector + *Enregistrer* (toggles
+  to *Enregistré ✓*), three summary cards (Exigences, Projets TCM, Charge / Capacité with
+  red over-capacity), restyled drag-&-drop import zone, the six-status diff legend, and the
+  requirements grid with a grouped super-header (*Exigences* / *Charge par équipe (SP)*),
+  per-status row colours, badge-styled REQ status select, and red Total/Capacity figures on
+  over-capacity.
+
+Status colours (PIP `PREPARATION/ACTIVE/CLOSED`, REQ `TODO/IN_PROGRESS/DONE`, and the six
+import-diff states) are theme tokens shared by both screens.

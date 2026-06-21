@@ -16,10 +16,10 @@ describe('App', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('should render the app name in the toolbar', () => {
+  it('should render the app name in the header bar', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('mat-toolbar')?.textContent).toContain('PIP Assistant');
+    expect(compiled.querySelector('.appbar')?.textContent).toContain('PIP Assistant');
   });
 });

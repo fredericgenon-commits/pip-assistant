@@ -38,7 +38,7 @@ describe('PipList', () => {
     flushInitialLoad([{ id: 1, code: '26_PIP_1', status: 'PREPARATION' }]);
     fixture.detectChanges();
 
-    const rows = (fixture.nativeElement as HTMLElement).querySelectorAll('tr[mat-row]');
+    const rows = (fixture.nativeElement as HTMLElement).querySelectorAll('.list-table tbody tr');
     expect(rows.length).toBe(1);
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('26_PIP_1');
   });
@@ -49,6 +49,6 @@ describe('PipList', () => {
     flushInitialLoad([]);
     fixture.detectChanges();
 
-    expect((fixture.nativeElement as HTMLElement).textContent).toContain('No PIP yet');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Aucun PIP');
   });
 });

@@ -2,64 +2,391 @@
   display: block;
 }
 
-.pip-grid {
-  width: 100%;
-  min-width: 1100px;
+/* ---------- Header ---------- */
+.detail-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
 }
 
-.pip-grid th,
-.pip-grid td {
-  padding: 4px 8px;
-  white-space: nowrap;
-}
-
-.cell-input {
-  width: 100%;
-  min-width: 90px;
-  border: 1px solid #cbd5e1; /* slate-300 */
-  border-radius: 4px;
-  padding: 2px 6px;
-  font: inherit;
-  background: #fff;
-}
-
-.cell-input.num {
-  width: 70px;
-  min-width: 70px;
-  text-align: right;
-}
-
-.cell-input:focus {
-  outline: none;
-  border-color: #6366f1; /* indigo-500 */
-}
-
-/* Excel import drop zone */
-.dropzone {
-  border: 2px dashed #cbd5e1; /* slate-300 */
-  border-radius: 8px;
-  padding: 20px;
-  text-align: center;
+.breadcrumb {
+  display: inline-block;
+  font-size: 12px;
+  color: var(--ink-muted);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
   cursor: pointer;
-  background: #f8fafc; /* slate-50 */
+  text-decoration: none;
+}
+.breadcrumb:hover {
+  color: var(--primary);
+}
+
+.detail-title-row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+.detail-title {
+  font-size: 30px;
+}
+
+.detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.team-label {
+  font-size: 12.5px;
+  color: var(--ink-muted);
+}
+
+/* ---------- Summary cards ---------- */
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 11px 16px;
+  min-width: 120px;
+}
+.summary-card__label {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  font-weight: 600;
+}
+.summary-card__value {
+  font-family: var(--font-head);
+  font-size: 22px;
+  font-weight: 600;
+}
+.summary-card__unit {
+  font-size: 14px;
+  color: var(--ink-muted);
+  font-weight: 500;
+}
+.summary-card__value.over {
+  color: var(--danger);
+}
+
+/* ---------- Import zone ---------- */
+.import-zone {
+  margin-bottom: 18px;
+}
+.dropzone {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--surface-alt);
+  border: 1.5px dashed var(--border-strong);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease;
 }
-
 .dropzone:hover {
-  border-color: #6366f1; /* indigo-500 */
-  background: #eef2ff; /* indigo-50 */
+  border-color: var(--primary);
 }
-
+.dropzone__icon {
+  width: 42px;
+  height: 42px;
+  flex: none;
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent2);
+}
+.dropzone__text {
+  flex: 1;
+}
+.dropzone__title {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.dropzone__hint {
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-top: 2px;
+}
 .hidden {
   display: none;
 }
 
-/* Diff-derived row backgrounds */
-.row-removed td {
-  background: #f1f5f9; /* slate-100: removed from PIP */
-  color: #94a3b8; /* slate-400 */
+/* ---------- Legend ---------- */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 16px;
+  margin-bottom: 14px;
+  align-items: center;
+}
+.legend__title {
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  font-weight: 600;
+  margin-right: 2px;
+}
+.legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ink-muted);
 }
 
-.row-missing td {
-  background: #fef2f2; /* red-50: missing mandatory data */
+/* ---------- Diff dots ---------- */
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex: none;
+  display: inline-block;
+}
+.dot--new {
+  background: var(--dot-new);
+}
+.dot--unchanged {
+  background: var(--dot-unchanged);
+}
+.dot--priority {
+  background: var(--dot-priority);
+}
+.dot--changed {
+  background: var(--dot-changed);
+}
+.dot--removed {
+  background: var(--dot-removed);
+}
+.dot--missing {
+  background: var(--dot-missing);
+}
+
+/* ---------- Grid ---------- */
+.grid-card {
+  overflow: auto;
+}
+.pip-grid {
+  width: 100%;
+  min-width: 1200px;
+  border-collapse: collapse;
+  font-size: var(--cell-fs);
+  background: var(--panel);
+}
+
+/* Cell layout overrides (Material adds large default padding/borders). */
+.pip-grid .mat-mdc-header-cell,
+.pip-grid .mat-mdc-cell,
+.pip-grid .mat-mdc-footer-cell {
+  padding: var(--row-pad) 10px;
+  border-bottom: 1px solid var(--grid-line);
+  color: var(--ink);
+  font-family: var(--font-body);
+  vertical-align: top;
+  letter-spacing: normal;
+}
+
+.pip-grid .mat-mdc-header-cell {
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--border-strong);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  font-weight: 600;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* Grouped super-header */
+.pip-grid .grp {
+  padding: 9px 12px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+}
+.pip-grid .grp--req {
+  text-align: left;
+  color: var(--ink-faint);
+}
+.pip-grid .grp--load {
+  text-align: center;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.ta-center {
+  text-align: center;
+}
+.ta-right {
+  text-align: right;
+}
+.mono {
+  font-family: var(--font-mono);
+}
+.key {
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+.strong {
+  font-weight: 500;
+}
+.team-col {
+  border-left: 1px solid var(--grid-line);
+}
+.pip-grid .team-col {
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
+/* Diff-derived row backgrounds */
+.pip-grid .row--new td {
+  background: var(--row-new);
+}
+.pip-grid .row--unchanged td {
+  background: var(--row-unchanged);
+}
+.pip-grid .row--priority td {
+  background: var(--row-priority);
+}
+.pip-grid .row--changed td {
+  background: var(--row-changed);
+}
+.pip-grid .row--missing td {
+  background: var(--row-missing);
+}
+.pip-grid .row--removed td {
+  background: var(--row-removed);
+  color: var(--ink-faint);
+}
+
+/* PIP status cell (dot + label) */
+.pipstatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--ink-muted);
+}
+
+/* Editable cells */
+.cell-input {
+  width: 100%;
+  border: 1px solid transparent;
+  background: transparent;
+  font: inherit;
+  font-size: var(--cell-fs);
+  color: var(--ink);
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  outline: none;
+}
+.cell-input.strong {
+  font-weight: 500;
+}
+.cell-input.muted {
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+.cell-input:hover:not(:disabled) {
+  background: var(--surface);
+}
+.cell-input:focus {
+  border-color: var(--primary);
+  background: var(--surface);
+}
+.cell-input:disabled {
+  color: var(--ink-faint);
+  cursor: default;
+}
+.cell-input.num {
+  width: 46px;
+  text-align: center;
+  font-family: var(--font-mono);
+}
+.cell-input.num.over {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+/* REQ status select styled as a badge */
+.req-badge {
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  border-radius: var(--badge-radius);
+  padding: 4px 9px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  background: var(--surface-alt);
+  color: var(--ink-muted);
+}
+.req-badge:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+.req-badge--TODO {
+  background: var(--st-todo-bg);
+  color: var(--st-todo-fg);
+}
+.req-badge--IN_PROGRESS {
+  background: var(--st-prog-bg);
+  color: var(--st-prog-fg);
+}
+.req-badge--DONE {
+  background: var(--st-done-bg);
+  color: var(--st-done-fg);
+}
+
+/* Footer rows */
+.pip-grid .total-row .mat-mdc-footer-cell {
+  background: var(--surface-alt);
+  border-top: 2px solid var(--border-strong);
+  border-bottom: none;
+}
+.pip-grid .cap-row .mat-mdc-footer-cell {
+  background: var(--surface-alt);
+  border-bottom: none;
+}
+.foot-label {
+  font-weight: 600;
+  font-size: 12.5px;
+  color: var(--ink);
+}
+.foot-label.muted {
+  color: var(--ink-muted);
+}
+.total-cell {
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+.total-cell.over {
+  color: var(--danger);
+}
+
+.list-empty {
+  padding: 22px 18px;
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 13px;
 }

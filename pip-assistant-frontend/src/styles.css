@@ -1,3 +1,197 @@
 /* You can add global styles to this file, and also import other style files */
 
 @import 'tailwindcss';
+
+/* ===========================================================================
+   PIP Assistant — "Regatta" design theme (from the design handoff).
+   Tokens are exposed as CSS custom properties; components reference var(--…).
+   =========================================================================== */
+:root {
+  --bg: #ece6da;
+  --surface: #f8f3ea;
+  --surface-alt: #f2ece0;
+  --panel: #ffffff;
+  --ink: #2c2a25;
+  --ink-muted: #7d756a;
+  --ink-faint: #a59c8e;
+  --border: #e1d9c9;
+  --border-strong: #d2c8b4;
+  --grid-line: #ebe3d4;
+  --primary: #c2683f;
+  --primary-ink: #fff8f2;
+  --primary-soft: #f1ddce;
+  --accent: #2f7e76;
+  --accent2: #c39a3b;
+  --radius: 8px;
+  --radius-sm: 4px;
+  --badge-radius: 4px;
+  --row-pad: 11px;
+  --cell-fs: 13px;
+  --shadow: 0 1px 2px rgba(60, 40, 30, 0.07);
+  --font-head: 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --head-fill: #c2683f;
+  --head-ink: #fff8f2;
+  --head-border: #b35f38;
+  --head-logo: #9c4e2c;
+  --stripe: linear-gradient(90deg, #c2683f 0 34%, #c39a3b 34% 67%, #2f7e76 67% 100%);
+  --stripe-h: 4px;
+
+  /* Semantic — PIP status badges (list). */
+  --st-prep-bg: #efe2c4;
+  --st-prep-fg: #8a6d1f;
+  --st-active-bg: #d7e7df;
+  --st-active-fg: #2f6b51;
+  --st-closed-bg: #e6e1d8;
+  --st-closed-fg: #7c7568;
+
+  /* Semantic — REQ status badges (grid). */
+  --st-todo-bg: #e3e6ec;
+  --st-todo-fg: #5b6675;
+  --st-prog-bg: #f1ddce;
+  --st-prog-fg: #a85a31;
+  --st-done-bg: #d9e7e3;
+  --st-done-fg: #2f7064;
+
+  /* Semantic — import diff (pip status). */
+  --row-new: #e9efe7;
+  --row-unchanged: var(--surface);
+  --row-priority: #f3ecda;
+  --row-changed: #f4e7dc;
+  --row-removed: #e9e6df;
+  --row-missing: #f4ded8;
+  --dot-new: #4a8f6a;
+  --dot-unchanged: #b3a98f;
+  --dot-priority: #c79a3b;
+  --dot-changed: #c46a43;
+  --dot-removed: #9a9384;
+  --dot-missing: #c0584a;
+
+  --danger: #c0584a;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+/* ---- Page container shared by both screens ---- */
+.page {
+  padding: 30px 28px 70px;
+  max-width: 1340px;
+  margin: 0 auto;
+}
+
+/* ---- Headings ---- */
+.h-title {
+  font-family: var(--font-head);
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  margin: 0;
+}
+
+/* ---- Cards / panels ---- */
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+/* ---- Buttons (native, themed) ---- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: var(--radius-sm);
+  padding: 9px 16px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  line-height: 1.1;
+}
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.btn--primary {
+  background: var(--primary);
+  color: var(--primary-ink);
+  box-shadow: var(--shadow);
+}
+.btn--primary:not(:disabled):hover {
+  filter: brightness(0.96);
+}
+.btn--ghost {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: var(--border-strong);
+}
+.btn--ghost:not(:disabled):hover {
+  background: var(--surface-alt);
+}
+.btn .material-icons {
+  font-size: 18px;
+}
+
+/* ---- Form controls (native, themed) ---- */
+.field {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: var(--font-body);
+  color: var(--ink);
+  outline: none;
+}
+.field:focus {
+  border-color: var(--primary);
+}
+
+/* ---- Badges ---- */
+.badge {
+  display: inline-block;
+  padding: 4px 11px;
+  border-radius: var(--badge-radius);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+.badge--PREPARATION {
+  background: var(--st-prep-bg);
+  color: var(--st-prep-fg);
+}
+.badge--ACTIVE {
+  background: var(--st-active-bg);
+  color: var(--st-active-fg);
+}
+.badge--CLOSED {
+  background: var(--st-closed-bg);
+  color: var(--st-closed-fg);
+}
+
+/* ---- New PIP dialog panel (MatDialog overlay lives outside component DOM) ---- */
+.pip-dialog-panel .mat-mdc-dialog-surface {
+  padding: 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 24px 60px -20px rgba(40, 33, 24, 0.5);
+}
+
+/* ---- Muted helper text under tables ---- */
+.note {
+  margin: 12px 2px 0;
+  font-size: 12px;
+  color: var(--ink-faint);
+}

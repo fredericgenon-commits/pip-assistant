@@ -1,17 +1,17 @@
 import { AfterViewInit, Component, ViewChild, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSort, MatSortModule } from '@angular/material/sort';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { PipDetailService } from './pip-detail.service';
 import { PipDetail as PipDetailData, PipInfo, RequirementRow, TeamRef } from './pip-detail.model';
 
+// Order matches the design: the first 9 columns form the "Exigences" group.
 const TEXT_COLUMNS = [
+  'pipStatus',
   'tcmKey',
   'tcmDescription',
   'reqKey',
@@ -25,33 +25,33 @@ const REMOVED_FROM_PIP = 'REMOVED_FROM_PIP';
 
 /** Display labels for the backend PIP status names (presentation only). */
 const PIP_STATUS_LABELS: Record<string, string> = {
-  NEW: 'New',
-  UNCHANGED: 'Unchanged',
-  CHANGED: 'Changed',
-  PRIORITY_CHANGED: 'Priority changed',
-  REMOVED_FROM_PIP: 'Removed from PIP',
-  MISSING_DATA: 'Missing data in import file'
+  NEW: 'Nouveau',
+  UNCHANGED: 'Inchangé',
+  CHANGED: 'Modifié',
+  PRIORITY_CHANGED: 'Priorité modifiée',
+  REMOVED_FROM_PIP: 'Retiré du PIP',
+  MISSING_DATA: 'Donnée manquante'
+};
+
+/** Maps a backend PIP status to the theme key used for row/dot colouring. */
+const PIP_STATUS_KEYS: Record<string, string> = {
+  NEW: 'new',
+  UNCHANGED: 'unchanged',
+  CHANGED: 'changed',
+  PRIORITY_CHANGED: 'priority',
+  REMOVED_FROM_PIP: 'removed',
+  MISSING_DATA: 'missing'
 };
 
 @Component({
   selector: 'app-pip-detail',
-  imports: [
-    RouterLink,
-    FormsModule,
-    MatTableModule,
-    MatSortModule,
-    MatFormFieldModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatSnackBarModule
-  ],
+  imports: [RouterLink, NgClass, FormsModule, MatTableModule, MatSortModule, MatSnackBarModule],
   templateUrl: './pip-detail.html',
   styleUrl: './pip-detail.css'
 })
 export class PipDetail implements AfterViewInit {
   private readonly service = inject(PipDetailService);
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
 
   private readonly pipId = Number(this.route.snapshot.paramMap.get('id'));
@@ -63,6 +63,7 @@ export class PipDetail implements AfterViewInit {
   protected readonly selectedTeamId = signal<number | null>(null);
   protected readonly dirty = signal(false);
   protected readonly saving = signal(false);
+  protected readonly saved = signal(false);
 
   // Excel import drop zone state.
   protected readonly droppedFile = signal<File | null>(null);
@@ -70,10 +71,14 @@ export class PipDetail implements AfterViewInit {
 
   protected readonly dataSource = new MatTableDataSource<RequirementRow>([]);
 
+  protected readonly groupColumns = ['groupReq', 'groupLoad'];
   protected readonly displayedColumns = computed(() => [
     'priority',
     ...TEXT_COLUMNS,
-    'pipStatus',
+    ...this.teams().map((t) => 'team_' + t.id)
+  ]);
+  protected readonly totalColumns = computed(() => [
+    'totalLabel',
     ...this.teams().map((t) => 'team_' + t.id)
   ]);
   protected readonly capacityColumns = computed(() => [
@@ -126,21 +131,59 @@ export class PipDetail implements AfterViewInit {
 
   protected markDirty(): void {
     this.dirty.set(true);
+    this.saved.set(false);
+  }
+
+  protected selectedTeamName(): string {
+    const id = this.selectedTeamId();
+    return this.teams().find((t) => t.id === id)?.name ?? '';
   }
 
   protected pipStatusLabel(status: string | null): string {
     return status ? PIP_STATUS_LABELS[status] ?? status : '';
   }
 
+  protected pipStatusKey(status: string | null): string {
+    return status ? PIP_STATUS_KEYS[status] ?? 'unchanged' : 'unchanged';
+  }
+
   protected isRemoved(row: RequirementRow): boolean {
     return row.pipStatus === REMOVED_FROM_PIP;
   }
 
+  private activeRows(): RequirementRow[] {
+    return this.dataSource.data.filter((row) => !this.isRemoved(row));
+  }
+
+  // ----- Summary cards -----
+
+  protected reqCount(): number {
+    return this.activeRows().length;
+  }
+
+  protected tcmCount(): number {
+    return new Set(this.activeRows().map((r) => r.tcmKey)).size;
+  }
+
+  protected totalLoad(): number {
+    return this.teams().reduce((sum, t) => sum + this.total(t.id), 0);
+  }
+
+  protected totalCap(): number {
+    return this.teams().reduce((sum, t) => sum + (Number(this.capacities()[t.id]) || 0), 0);
+  }
+
+  protected loadOver(): boolean {
+    return this.totalLoad() > this.totalCap();
+  }
+
   /** Live sum of a team's story points; requirements removed from the PIP are excluded. */
   protected total(teamId: number): number {
-    return this.dataSource.data
-      .filter((row) => !this.isRemoved(row))
-      .reduce((sum, row) => sum + (Number(row.workloads[teamId]) || 0), 0);
+    return this.activeRows().reduce((sum, row) => sum + (Number(row.workloads[teamId]) || 0), 0);
+  }
+
+  protected teamOver(teamId: number): boolean {
+    return this.total(teamId) > (Number(this.capacities()[teamId]) || 0);
   }
 
   protected setCapacity(teamId: number, value: number | null): void {
@@ -175,7 +218,7 @@ export class PipDetail implements AfterViewInit {
   private acceptFile(file: File): void {
     if (!file.name.toLowerCase().endsWith('.xlsx')) {
       this.droppedFile.set(null);
-      this.toast('Only .xlsx files can be imported.');
+      this.toast('Seuls les fichiers .xlsx peuvent être importés.');
       return;
     }
     this.droppedFile.set(file);
@@ -192,17 +235,24 @@ export class PipDetail implements AfterViewInit {
         this.apply(detail);
         this.droppedFile.set(null);
         this.importing.set(false);
-        this.toast('Import done.');
+        this.toast('Import terminé.');
       },
       error: (err) => {
         this.importing.set(false);
-        this.toast(err?.error?.message ?? 'The file could not be imported.');
+        this.toast(err?.error?.message ?? "Le fichier n'a pas pu être importé.");
       }
     });
   }
 
   private toast(message: string): void {
     this.snackBar.open(message, undefined, { duration: 3500 });
+  }
+
+  protected saveLabel(): string {
+    if (this.saving()) {
+      return 'Enregistrement…';
+    }
+    return this.saved() ? 'Enregistré ✓' : 'Enregistrer';
   }
 
   protected save(): void {
@@ -222,6 +272,7 @@ export class PipDetail implements AfterViewInit {
     this.service.save(this.pipId, payload).subscribe({
       next: () => {
         this.saving.set(false);
+        this.saved.set(true);
         this.load();
       },
       error: () => this.saving.set(false)

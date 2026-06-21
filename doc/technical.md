@@ -297,3 +297,25 @@ in the git-ignored `test-data/` directory. See the skill's `SKILL.md` for all op
 - Excel import Slice 2: version history viewer + rollback (snapshots already stored).
 - PIP detail enhancements (status/date editing), OpenAPI, status-admin screen.
 - Integrations: GitLab REST API v4, JIRA REST API, XLDeploy REST API.
+
+## Frontend theming (Regatta design)
+
+The design hand-off (`PIP Assistant.dc.html`, imported via the Claude Design connector) is a
+visual reference, not production code; the two screens were recreated with the existing
+Angular + Material stack.
+
+- **Tokens** — the "Regatta" palette/typography/density is exposed as CSS custom properties
+  on `:root` in `src/styles.css`, alongside shared classes (`.page`, `.card`, `.btn`,
+  `.badge`, `.field`, `.note`) and the semantic status/diff colour variables. Fonts
+  (Space Grotesk / DM Sans / IBM Plex Mono) are loaded in `index.html`.
+- **App shell** — `App` renders the header bar + stripe (`app.html` / `app.css`); the
+  `mat-toolbar` was removed.
+- **List / detail / dialog** — native themed controls replace most `mat-button` /
+  `mat-form-field` usages for pixel fidelity. The detail grid keeps `mat-table` + `MatSort`
+  (sort, two footer rows) with a second grouped header row (`groupReq` colspan 9 /
+  `groupLoad` colspan = team count) and Material cell padding overridden to the token grid;
+  the New-PIP dialog keeps `MatDialogRef` mechanics with a custom panel
+  (`panelClass: pip-dialog-panel`, surface padding reset globally).
+- No business logic moved to the client: totals, counts, over-capacity flags and the period
+  placeholder are presentation-only; `PipResponse` still omits dates (period shows
+  *À planifier*).
