@@ -122,5 +122,11 @@ next number. Keep this history up to date as part of finishing a task.
   hand-off (`PIP Assistant.dc.html`, imported via the Claude Design connector) — **English**
   UI copy, app shell header + stripe, summary cards, diff legend, grouped-header grid.
   **Two switchable themes**: Regatta (default, `:root`) and Marina (`body.theme-marina`),
-  toggled from the header and persisted in `localStorage`. Frontend-only; no business logic
-  moved client-side. `Period` shows "To be scheduled" (PIP dates not captured yet).
+  toggled from the header and persisted in `localStorage`. `Period` shows "To be scheduled"
+  (PIP dates not captured yet).
+- **Team scope & TBD workloads**: complete. The PIP-detail `Team` selector is nullable
+  (`All`); the three summary cards show global figures for `All`, or only what impacts the
+  selected team otherwise (impact = a value or `TBD` in that team's cell). A workload cell
+  accepts **`TBD`** ("To Be Defined") — persisted full-stack via a `workload.tbd` flag
+  (Flyway `V5`); detail API carries workloads as **cell text** (`Map<Long,String>`), parsed
+  on save, and TBD is a manual override that imports never overwrite.

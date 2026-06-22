@@ -9,14 +9,17 @@ public record SavePipDetailCommand(
         List<RequirementEdit> requirements,
         Map<Long, BigDecimal> capacities) {
 
-    /** Edits for one requirement row (TCM/REQ keys are read-only and not included). */
+    /**
+     * Edits for one requirement row (TCM/REQ keys are read-only and not included). Workloads
+     * are the raw cell text per team — a number, "TBD", or empty/blank to clear the cell.
+     */
     public record RequirementEdit(
             Long id,
             String tcmDescription,
             String description,
             String status,
             String pmComment,
-            Map<Long, BigDecimal> workloads,
+            Map<Long, String> workloads,
             Map<Long, String> comments) {
     }
 }

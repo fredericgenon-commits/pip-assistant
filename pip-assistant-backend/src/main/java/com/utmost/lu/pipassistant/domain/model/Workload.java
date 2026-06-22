@@ -2,6 +2,9 @@ package com.utmost.lu.pipassistant.domain.model;
 
 import java.math.BigDecimal;
 
-/** The effort (story points) of a team on a requirement. */
-public record Workload(Long requirementId, Long teamId, BigDecimal estimate) {
+/**
+ * The effort (story points) of a team on a requirement. When {@code tbd} is true the team is
+ * impacted but the estimate is not known yet ("To Be Defined"); {@code estimate} is then null.
+ */
+public record Workload(Long requirementId, Long teamId, BigDecimal estimate, boolean tbd) {
 }

@@ -41,7 +41,7 @@ class PipDetailControllerTest {
     private static PipDetailView view() {
         Pip pip = new Pip(1L, PipCode.of("26_PIP_1"), null, null, PipStatus.PREPARATION);
         var row = new PipDetailView.RequirementRow(7L, 5L, "TCM-1", "tcm desc", "REQ-1",
-                "req desc", "TODO", "pm", 1, "NEW", Map.of(10L, new BigDecimal("3")), Map.of(10L, "note"));
+                "req desc", "TODO", "pm", 1, "NEW", Map.of(10L, "3"), Map.of(10L, "note"));
         return new PipDetailView(pip, List.of(new Team(10L, "Core")), List.of(row),
                 Map.of(10L, new BigDecimal("20")));
     }
@@ -55,7 +55,7 @@ class PipDetailControllerTest {
                 .andExpect(jsonPath("$.pip.code").value("26_PIP_1"))
                 .andExpect(jsonPath("$.teams[0].name").value("Core"))
                 .andExpect(jsonPath("$.requirements[0].tcmKey").value("TCM-1"))
-                .andExpect(jsonPath("$.requirements[0].workloads.10").value(3))
+                .andExpect(jsonPath("$.requirements[0].workloads.10").value("3"))
                 .andExpect(jsonPath("$.capacities.10").value(20));
     }
 

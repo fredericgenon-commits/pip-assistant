@@ -6,6 +6,8 @@ import java.util.Map;
 
 import com.utmost.lu.pipassistant.application.SavePipDetailCommand;
 
+// Workloads are carried as cell text (a number, "TBD", or empty); capacities stay numeric.
+
 /** Bulk save payload from the PIP Details "Save" button. */
 public record SavePipDetailRequest(
         List<RequirementEditRequest> requirements,
@@ -17,7 +19,7 @@ public record SavePipDetailRequest(
             String description,
             String status,
             String pmComment,
-            Map<Long, BigDecimal> workloads,
+            Map<Long, String> workloads,
             Map<Long, String> comments) {
     }
 

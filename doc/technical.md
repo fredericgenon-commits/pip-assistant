@@ -324,3 +324,21 @@ Angular + Material stack. UI copy is English.
 - No business logic moved to the client: totals, counts, over-capacity flags and the period
   placeholder are presentation-only; `PipResponse` still omits dates (period shows
   *To be scheduled*).
+
+## Workloads: "TBD" cells & team scoping
+
+A workload cell can hold a number, be empty, or be **`TBD`** (impacted but unestimated).
+
+- **Persistence** — `workload` gains a `tbd` boolean (Flyway **V5**); `Workload`
+  (domain) and `WorkloadEntity` carry it, `estimate` is null when `tbd`. The detail
+  **API carries workloads as cell text** (`Map<Long, String>`) in both the read model
+  (`PipDetailView` / `RequirementRowResponse`) and the save payload
+  (`SavePipDetailRequest` / `SavePipDetailCommand`); capacities stay numeric.
+  `PipDetailService` parses each cell on save (`""`→clear, `TBD`→flag, else `BigDecimal`)
+  and renders it back on read; `upsertWorkload(reqId, teamId, estimate, tbd)` marks the cell
+  a manual override when the number **or** the TBD flag changes, so the Excel import (which
+  stays numeric and never produces TBD) leaves it untouched.
+- **Team scoping (frontend)** — the `Team` selector is nullable (`All`). Summary cards use
+  `scopedRows()` (all active rows, or only those `impactsTeam()` when a team is picked);
+  `totalLoad()`/`totalCap()` switch between grand totals and the selected team's figures.
+  Workload cells are text inputs (`Number.parseFloat` for totals/sorting; `TBD`/empty → 0).

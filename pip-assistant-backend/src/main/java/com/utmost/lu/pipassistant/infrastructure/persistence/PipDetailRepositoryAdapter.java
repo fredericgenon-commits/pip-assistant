@@ -65,7 +65,7 @@ public class PipDetailRepositoryAdapter implements PipDetailRepository {
             return List.of();
         }
         return workloadRepository.findByRequirementIdIn(requirementIds).stream()
-                .map(e -> new Workload(e.getRequirementId(), e.getTeamId(), e.getEstimate()))
+                .map(e -> new Workload(e.getRequirementId(), e.getTeamId(), e.getEstimate(), e.isTbd()))
                 .toList();
     }
 
@@ -106,15 +106,17 @@ public class PipDetailRepositoryAdapter implements PipDetailRepository {
     }
 
     @Override
-    public void upsertWorkload(Long requirementId, Long teamId, BigDecimal estimate) {
+    public void upsertWorkload(Long requirementId, Long teamId, BigDecimal estimate, boolean tbd) {
+        BigDecimal effectiveEstimate = tbd ? null : estimate;
         WorkloadEntity entity = workloadRepository.findByRequirementIdAndTeamId(requirementId, teamId)
                 .orElseGet(() -> new WorkloadEntity(requirementId, teamId, null));
-        // This path is the manual Save: a changed value becomes a manual override that
-        // subsequent imports must not overwrite.
-        if (numericChanged(entity.getEstimate(), estimate)) {
+        // This path is the manual Save: a changed value (number or the TBD flag) becomes a
+        // manual override that subsequent imports must not overwrite.
+        if (numericChanged(entity.getEstimate(), effectiveEstimate) || entity.isTbd() != tbd) {
             entity.setManualOverride(true);
         }
-        entity.setEstimate(estimate);
+        entity.setEstimate(effectiveEstimate);
+        entity.setTbd(tbd);
         workloadRepository.save(entity);
     }
 

@@ -27,6 +27,10 @@ public class WorkloadEntity {
     @Column(name = "estimate", precision = 7, scale = 2)
     private BigDecimal estimate;
 
+    /** True when the team is impacted but the estimate is not known yet (estimate is null). */
+    @Column(name = "tbd", nullable = false)
+    private boolean tbd = false;
+
     /** True once a user edits this cell: subsequent imports must not overwrite it. */
     @Column(name = "manual_override", nullable = false)
     private boolean manualOverride = false;
@@ -54,6 +58,14 @@ public class WorkloadEntity {
 
     public void setEstimate(BigDecimal estimate) {
         this.estimate = estimate;
+    }
+
+    public boolean isTbd() {
+        return tbd;
+    }
+
+    public void setTbd(boolean tbd) {
+        this.tbd = tbd;
     }
 
     public boolean isManualOverride() {

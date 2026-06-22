@@ -56,7 +56,7 @@ class PipDetailServiceTest {
         when(detailRepository.findRequirementsByPip(1L))
                 .thenReturn(List.of(new Requirement(7L, "REQ-1", "req desc", "TODO", "pm", 5L, 1, "NEW")));
         when(detailRepository.findWorkloadsByPip(1L))
-                .thenReturn(List.of(new Workload(7L, 10L, new BigDecimal("3.5"))));
+                .thenReturn(List.of(new Workload(7L, 10L, new BigDecimal("3.5"), false)));
         when(detailRepository.findDevCommentsByPip(1L))
                 .thenReturn(List.of(new DevComment(7L, 10L, "dev note")));
         when(detailRepository.findCapacitiesByPip(1L))
@@ -68,7 +68,7 @@ class PipDetailServiceTest {
         PipDetailView.RequirementRow row = view.requirements().get(0);
         assertThat(row.tcmKey()).isEqualTo("TCM-1");
         assertThat(row.tcmDescription()).isEqualTo("TCM desc");
-        assertThat(row.workloads()).containsEntry(10L, new BigDecimal("3.5"));
+        assertThat(row.workloads()).containsEntry(10L, "3.5");
         assertThat(row.comments()).containsEntry(10L, "dev note");
         assertThat(view.capacities()).containsEntry(10L, new BigDecimal("20"));
     }
@@ -90,14 +90,28 @@ class PipDetailServiceTest {
 
         var edit = new SavePipDetailCommand.RequirementEdit(
                 7L, "new tcm desc", "new req desc", "DONE", "pm2",
-                Map.of(10L, new BigDecimal("4")), Map.of(10L, "note"));
+                Map.of(10L, "4"), Map.of(10L, "note"));
         service().save(1L, new SavePipDetailCommand(List.of(edit), Map.of(10L, new BigDecimal("15"))));
 
         verify(detailRepository).updateRequirement(7L, "new req desc", "DONE", "pm2");
         verify(detailRepository).updateProjectDescription(5L, "new tcm desc");
-        verify(detailRepository).upsertWorkload(7L, 10L, new BigDecimal("4"));
+        verify(detailRepository).upsertWorkload(7L, 10L, new BigDecimal("4"), false);
         verify(detailRepository).upsertDevComment(7L, 10L, "note");
         verify(detailRepository).upsertCapacity(1L, 10L, new BigDecimal("15"));
+    }
+
+    @Test
+    void save_parsesTbdWorkloadCell() {
+        when(pipRepository.findById(1L)).thenReturn(Optional.of(pip(1L)));
+        when(statusCatalog.all()).thenReturn(List.of("TODO", "IN_PROGRESS", "DONE"));
+        when(detailRepository.findRequirementsByPip(1L))
+                .thenReturn(List.of(new Requirement(7L, "REQ-1", "d", "TODO", "pm", 5L, 1, "NEW")));
+
+        var edit = new SavePipDetailCommand.RequirementEdit(
+                7L, "t", "d", "TODO", "pm", Map.of(10L, "TBD"), Map.of());
+        service().save(1L, new SavePipDetailCommand(List.of(edit), Map.of()));
+
+        verify(detailRepository).upsertWorkload(7L, 10L, null, true);
     }
 
     @Test

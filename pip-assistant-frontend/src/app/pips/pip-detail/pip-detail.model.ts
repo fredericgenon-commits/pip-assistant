@@ -21,8 +21,8 @@ export interface RequirementRow {
   priority: number | null;
   /** Diff-derived PIP status name (NEW, CHANGED, REMOVED_FROM_PIP, ...); null before any import. */
   pipStatus: string | null;
-  /** team id -> story points */
-  workloads: Record<number, number | null>;
+  /** team id -> workload cell text: a number, "TBD", or empty. */
+  workloads: Record<number, string>;
   /** team id -> dev comment */
   comments: Record<number, string>;
 }
@@ -42,7 +42,7 @@ export interface SavePipDetailPayload {
     description: string;
     status: string;
     pmComment: string;
-    workloads: Record<number, number | null>;
+    workloads: Record<number, string>;
     comments: Record<number, string>;
   }>;
   capacities: Record<number, number | null>;

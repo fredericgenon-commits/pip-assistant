@@ -83,7 +83,7 @@ class ExcelImportRepositoryAdapterTest {
 
         Requirement live = detailAdapter.findRequirementsByPip(pipId).get(0);
         // User edits the Core workload by hand (5 -> 8): this marks a manual override.
-        detailAdapter.upsertWorkload(live.id(), CORE_TEAM_ID, new BigDecimal("8"));
+        detailAdapter.upsertWorkload(live.id(), CORE_TEAM_ID, new BigDecimal("8"), false);
 
         // v2 file says Core = 3, but the manual value must survive.
         importAdapter.applyImport(pipId, 2, "v2.xlsx", Instant.now(), new ImportDiff(List.of(

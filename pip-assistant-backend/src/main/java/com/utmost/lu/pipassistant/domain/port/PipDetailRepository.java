@@ -29,8 +29,11 @@ public interface PipDetailRepository {
 
     void updateRequirement(Long requirementId, String description, String status, String pmComment);
 
-    /** Insert or update a team's workload on a requirement. */
-    void upsertWorkload(Long requirementId, Long teamId, BigDecimal estimate);
+    /**
+     * Insert or update a team's workload on a requirement. When {@code tbd} is true the cell
+     * is marked "To Be Defined" and {@code estimate} is ignored (stored as null).
+     */
+    void upsertWorkload(Long requirementId, Long teamId, BigDecimal estimate, boolean tbd);
 
     /** Insert or update a team's dev comment on a requirement. */
     void upsertDevComment(Long requirementId, Long teamId, String text);

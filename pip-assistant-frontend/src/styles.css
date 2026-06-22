@@ -123,7 +123,7 @@ body {
 /* ---- Page container shared by both screens ---- */
 .page {
   padding: 30px 28px 70px;
-  max-width: 1340px;
+  max-width: 1600px;
   margin: 0 auto;
 }
 

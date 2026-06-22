@@ -40,12 +40,20 @@ class PipDetailRepositoryAdapterTest {
                 .extracting(r -> r.reqKey()).isEqualTo("REQ-1");
 
         // upsert workload then update it (team 1 = Core, seeded by Flyway V3)
-        adapter.upsertWorkload(req.id(), 1L, new BigDecimal("3.0"));
-        adapter.upsertWorkload(req.id(), 1L, new BigDecimal("5.0"));
+        adapter.upsertWorkload(req.id(), 1L, new BigDecimal("3.0"), false);
+        adapter.upsertWorkload(req.id(), 1L, new BigDecimal("5.0"), false);
         assertThat(adapter.findWorkloadsByPip(pipId)).singleElement()
                 .extracting(w -> w.estimate(), org.assertj.core.api.Assertions.as(
                         org.assertj.core.api.InstanceOfAssertFactories.BIG_DECIMAL))
                 .isEqualByComparingTo("5.0");
+
+        // marking the cell TBD clears the estimate and sets the flag
+        adapter.upsertWorkload(req.id(), 1L, null, true);
+        assertThat(adapter.findWorkloadsByPip(pipId)).singleElement()
+                .satisfies(w -> {
+                    assertThat(w.tbd()).isTrue();
+                    assertThat(w.estimate()).isNull();
+                });
 
         adapter.upsertDevComment(req.id(), 1L, "note");
         assertThat(adapter.findDevCommentsByPip(pipId)).singleElement()

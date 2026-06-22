@@ -1,6 +1,5 @@
 package com.utmost.lu.pipassistant.infrastructure.web.dto;
 
-import java.math.BigDecimal;
 import java.util.Map;
 
 import com.utmost.lu.pipassistant.application.PipDetailView;
@@ -16,7 +15,7 @@ public record RequirementRowResponse(
         String pmComment,
         Integer priority,
         String pipStatus,
-        Map<Long, BigDecimal> workloads,
+        Map<Long, String> workloads,
         Map<Long, String> comments) {
 
     public static RequirementRowResponse from(PipDetailView.RequirementRow row) {

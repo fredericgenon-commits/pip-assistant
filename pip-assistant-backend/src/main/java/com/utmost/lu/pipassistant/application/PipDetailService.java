@@ -56,10 +56,11 @@ public class PipDetailService {
         Map<Long, Project> projectsById = detailRepository.findProjectsByPip(pipId).stream()
                 .collect(Collectors.toMap(Project::id, Function.identity()));
 
-        Map<Long, Map<Long, BigDecimal>> workloadsByRequirement = detailRepository
+        Map<Long, Map<Long, String>> workloadsByRequirement = detailRepository
                 .findWorkloadsByPip(pipId).stream()
+                .filter(w -> w.tbd() || w.estimate() != null)
                 .collect(Collectors.groupingBy(Workload::requirementId,
-                        Collectors.toMap(Workload::teamId, Workload::estimate)));
+                        Collectors.toMap(Workload::teamId, PipDetailService::cellText)));
 
         Map<Long, Map<Long, String>> commentsByRequirement = detailRepository
                 .findDevCommentsByPip(pipId).stream()
@@ -120,8 +121,12 @@ public class PipDetailService {
             }
             detailRepository.updateRequirement(edit.id(), edit.description(), edit.status(), edit.pmComment());
             detailRepository.updateProjectDescription(existing.projectId(), edit.tcmDescription());
-            normalize(edit.workloads()).forEach(
-                    (teamId, estimate) -> detailRepository.upsertWorkload(edit.id(), teamId, estimate));
+            normalize(edit.workloads()).forEach((teamId, cell) -> {
+                WorkloadCell parsed = parseWorkloadCell(cell);
+                if (parsed != null) {
+                    detailRepository.upsertWorkload(edit.id(), teamId, parsed.estimate(), parsed.tbd());
+                }
+            });
             normalize(edit.comments()).forEach(
                     (teamId, text) -> detailRepository.upsertDevComment(edit.id(), teamId, text));
         }
@@ -132,6 +137,43 @@ public class PipDetailService {
 
     private static <V> Map<Long, V> normalize(Map<Long, V> map) {
         return map != null ? map : Map.of();
+    }
+
+    private static final String TBD = "TBD";
+
+    /** Renders a stored workload as the cell text shown in the grid (a number or "TBD"). */
+    private static String cellText(Workload workload) {
+        if (workload.tbd()) {
+            return TBD;
+        }
+        BigDecimal estimate = workload.estimate();
+        if (estimate.compareTo(BigDecimal.ZERO) == 0) {
+            return "0";
+        }
+        return estimate.stripTrailingZeros().toPlainString();
+    }
+
+    /**
+     * Parses a workload cell into an (estimate, tbd) pair. Empty/blank clears the cell;
+     * "TBD" (case-insensitive) marks it To Be Defined; otherwise it must be a number. Returns
+     * null for an unparseable value so the existing cell is left untouched.
+     */
+    private static WorkloadCell parseWorkloadCell(String cell) {
+        String trimmed = cell == null ? "" : cell.trim();
+        if (trimmed.isEmpty()) {
+            return new WorkloadCell(null, false);
+        }
+        if (TBD.equalsIgnoreCase(trimmed)) {
+            return new WorkloadCell(null, true);
+        }
+        try {
+            return new WorkloadCell(new BigDecimal(trimmed), false);
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
+    private record WorkloadCell(BigDecimal estimate, boolean tbd) {
     }
 
     /** Interim creation entry point (tests / future Excel/JIRA import). */

@@ -96,7 +96,7 @@ export class PipDetail implements AfterViewInit {
   ngAfterViewInit(): void {
     this.dataSource.sortingDataAccessor = (row, columnId) => {
       if (columnId.startsWith('team_')) {
-        return row.workloads[Number(columnId.slice(5))] ?? 0;
+        return Number.parseFloat(row.workloads[Number(columnId.slice(5))]) || 0;
       }
       if (columnId === 'priority') {
         return row.priority ?? Number.MAX_SAFE_INTEGER;
@@ -123,9 +123,7 @@ export class PipDetail implements AfterViewInit {
     this.teams.set(detail.teams);
     this.capacities.set(detail.capacities ?? {});
     this.dataSource.data = detail.requirements;
-    if (detail.teams.length > 0 && this.selectedTeamId() == null) {
-      this.selectedTeamId.set(detail.teams[0].id);
-    }
+    // Default selection is "All" (null): the summary cards show global figures.
     this.dirty.set(false);
   }
 
@@ -137,6 +135,11 @@ export class PipDetail implements AfterViewInit {
   protected selectedTeamName(): string {
     const id = this.selectedTeamId();
     return this.teams().find((t) => t.id === id)?.name ?? '';
+  }
+
+  /** Shortened team label for the narrow grid headers. */
+  protected teamShort(name: string): string {
+    return name === 'Document' ? 'Doc' : name;
   }
 
   protected pipStatusLabel(status: string | null): string {
@@ -155,21 +158,46 @@ export class PipDetail implements AfterViewInit {
     return this.dataSource.data.filter((row) => !this.isRemoved(row));
   }
 
+  /** A requirement impacts a team when its cell holds a value (incl. 0) or "TBD". */
+  protected impactsTeam(row: RequirementRow, teamId: number): boolean {
+    return (row.workloads[teamId] ?? '').toString().trim() !== '';
+  }
+
+  /**
+   * Active rows in scope of the summary cards: all of them when no team is selected ("All"),
+   * otherwise only those impacting the selected team.
+   */
+  private scopedRows(): RequirementRow[] {
+    const teamId = this.selectedTeamId();
+    const rows = this.activeRows();
+    return teamId == null ? rows : rows.filter((row) => this.impactsTeam(row, teamId));
+  }
+
   // ----- Summary cards -----
 
   protected reqCount(): number {
-    return this.activeRows().length;
+    return this.scopedRows().length;
   }
 
   protected tcmCount(): number {
-    return new Set(this.activeRows().map((r) => r.tcmKey)).size;
+    return new Set(this.scopedRows().map((r) => r.tcmKey)).size;
   }
 
+  /** Load shown by the card: a single team's load when selected, else the grand total. */
   protected totalLoad(): number {
+    const teamId = this.selectedTeamId();
+    if (teamId != null) {
+      return this.total(teamId);
+    }
     return this.teams().reduce((sum, t) => sum + this.total(t.id), 0);
   }
 
+  /** Capacity shown by the card: a single team's capacity when selected, else the total. */
   protected totalCap(): number {
+    const teamId = this.selectedTeamId();
+    if (teamId != null) {
+      return Number(this.capacities()[teamId]) || 0;
+    }
     return this.teams().reduce((sum, t) => sum + (Number(this.capacities()[t.id]) || 0), 0);
   }
 
@@ -177,9 +205,12 @@ export class PipDetail implements AfterViewInit {
     return this.totalLoad() > this.totalCap();
   }
 
-  /** Live sum of a team's story points; requirements removed from the PIP are excluded. */
+  /** Live sum of a team's story points (TBD/empty count as 0); removed rows are excluded. */
   protected total(teamId: number): number {
-    return this.activeRows().reduce((sum, row) => sum + (Number(row.workloads[teamId]) || 0), 0);
+    return this.activeRows().reduce(
+      (sum, row) => sum + (Number.parseFloat(row.workloads[teamId]) || 0),
+      0
+    );
   }
 
   protected teamOver(teamId: number): boolean {

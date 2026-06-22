@@ -24,7 +24,7 @@ function detail(): PipDetailModel {
         pmComment: 'pm',
         priority: 1,
         pipStatus: 'NEW',
-        workloads: { 1: 3, 2: 5 },
+        workloads: { 1: '3', 2: '5' },
         comments: { 1: 'core note' }
       }
     ],
@@ -80,6 +80,24 @@ describe('PipDetail', () => {
     expect(fixture.componentInstance['total'](1)).toBe(3);
   });
 
+  it('filters the summary count by the selected team', () => {
+    const fixture = TestBed.createComponent(PipDetail);
+    fixture.detectChanges();
+    const c = fixture.componentInstance;
+
+    // "All" (default): the single requirement is counted.
+    expect(c['reqCount']()).toBe(1);
+
+    // The requirement impacts team 1 (has a value) ...
+    c['selectedTeamId'].set(1);
+    expect(c['reqCount']()).toBe(1);
+
+    // ... but once team 2's cell is cleared, it no longer impacts team 2.
+    c['selectedTeamId'].set(2);
+    c['dataSource'].data[0].workloads[2] = '';
+    expect(c['reqCount']()).toBe(0);
+  });
+
   it('builds the save payload from rows and capacities', () => {
     const fixture = TestBed.createComponent(PipDetail);
     fixture.detectChanges();
@@ -89,7 +107,7 @@ describe('PipDetail', () => {
     expect(saveCalls.length).toBe(1);
     expect(saveCalls[0].pipId).toBe(1);
     expect(saveCalls[0].payload.requirements[0].id).toBe(7);
-    expect(saveCalls[0].payload.requirements[0].workloads).toEqual({ 1: 3, 2: 5 });
+    expect(saveCalls[0].payload.requirements[0].workloads).toEqual({ 1: '3', 2: '5' });
     expect(saveCalls[0].payload.capacities).toEqual({ 1: 10 });
   });
 

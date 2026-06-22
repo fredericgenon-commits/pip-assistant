@@ -304,3 +304,17 @@ the layout and the semantic status colours stay identical.
 
 Status colours (PIP `PREPARATION/ACTIVE/CLOSED`, REQ `TODO/IN_PROGRESS/DONE`, and the six
 import-diff states) are theme tokens shared by both screens and both directions.
+
+### Team scope & "TBD" workloads
+
+The **Team** selector (PIP detail) drives more than the Dev-comment column:
+
+- **All** (default) — the three summary cards show global figures (all requirements, all
+  distinct TCMs, total load / total capacity).
+- **A team selected** — the cards narrow to that team: only the requirements that **impact**
+  it, the distinct TCMs among them, and that team's load / capacity. A requirement impacts a
+  team when its cell for that team holds a value (including `0`) or **`TBD`**.
+
+A team cell now accepts **`TBD`** ("To Be Defined"): the team is impacted by the requirement
+but the story-point estimate is not known yet. `TBD` counts as 0 in the load totals, is a
+manual edit (so later imports do not overwrite it), and persists across reloads.
