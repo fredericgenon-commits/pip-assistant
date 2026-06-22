@@ -42,12 +42,11 @@ management:
 
 # Application-specific configuration.
 pip:
-  requirement:
-    # Allowed requirement statuses (configurable; restart to apply).
-    statuses:
-      - TODO
-      - IN_PROGRESS
-      - DONE
+  jira:
+    # JIRA Server / Data Center base URL and Personal Access Token.
+    # Set SPRING_PROFILES_ACTIVE=jira-mock to run locally without a real JIRA connection.
+    base-url: ${JIRA_BASE_URL:https://jira.example.com}
+    api-token: ${JIRA_API_TOKEN:}
   import:
     # Excel layout for the PM planning file. Columns are matched by 0-based POSITION
     # (header labels in the file may differ, e.g. "REQ Title"). Matches the files

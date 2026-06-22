@@ -21,6 +21,9 @@
         <option [ngValue]="team.id">{{ team.name }}</option>
       }
     </select>
+    <button type="button" class="btn btn--secondary" [disabled]="syncing()" (click)="syncJira()">
+      {{ syncing() ? 'Syncing…' : 'Synchronize JIRA' }}
+    </button>
     <button type="button" class="btn btn--primary" [disabled]="!dirty() || saving()" (click)="save()">
       {{ saveLabel() }}
     </button>
@@ -110,10 +113,13 @@
       </td>
     </ng-container>
 
-    <!-- Read-only key columns -->
+    <!-- Read-only key columns (double-click opens ticket in JIRA) -->
     <ng-container matColumnDef="tcmKey">
       <th mat-header-cell *matHeaderCellDef mat-sort-header>TCM</th>
-      <td mat-cell *matCellDef="let row" class="mono key">{{ row.tcmKey }}</td>
+      <td mat-cell *matCellDef="let row" class="mono key"
+          [class.jira-link]="row.tcmUrl"
+          [title]="row.tcmUrl ? 'Double-click to open in JIRA' : ''"
+          (dblclick)="openInJira(row.tcmUrl)">{{ row.tcmKey }}</td>
     </ng-container>
 
     <ng-container matColumnDef="tcmDescription">
@@ -126,7 +132,10 @@
 
     <ng-container matColumnDef="reqKey">
       <th mat-header-cell *matHeaderCellDef mat-sort-header>REQ</th>
-      <td mat-cell *matCellDef="let row" class="mono key strong">{{ row.reqKey }}</td>
+      <td mat-cell *matCellDef="let row" class="mono key strong"
+          [class.jira-link]="row.reqUrl"
+          [title]="row.reqUrl ? 'Double-click to open in JIRA' : ''"
+          (dblclick)="openInJira(row.reqUrl)">{{ row.reqKey }}</td>
     </ng-container>
 
     <ng-container matColumnDef="description">
@@ -140,13 +149,7 @@
     <ng-container matColumnDef="status">
       <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
       <td mat-cell *matCellDef="let row">
-        <select class="req-badge" [ngClass]="'req-badge--' + row.status" [ngModel]="row.status"
-                [disabled]="isRemoved(row)" (ngModelChange)="row.status = $event; markDirty()">
-          <option value=""></option>
-          @for (s of statuses(); track s) {
-            <option [value]="s">{{ s }}</option>
-          }
-        </select>
+        <span class="req-badge req-badge--{{ normalizeStatus(row.status) }}">{{ row.status || '—' }}</span>
       </td>
     </ng-container>
 
@@ -218,6 +221,7 @@
 </div>
 
 <p class="note">
-  All cells are editable except the TCM and REQ keys. Workloads edited by hand become manual
-  overrides that later imports do not overwrite. Click a header to sort.
+  TCM and REQ keys and the JIRA status are read-only. Workloads edited by hand become manual
+  overrides that later imports do not overwrite. Double-click a REQ or TCM key to open the ticket in JIRA.
+  Click a header to sort.
 </p>

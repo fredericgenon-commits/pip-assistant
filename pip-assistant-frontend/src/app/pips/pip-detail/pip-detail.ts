@@ -58,12 +58,12 @@ export class PipDetail implements AfterViewInit {
 
   protected readonly pip = signal<PipInfo | null>(null);
   protected readonly teams = signal<TeamRef[]>([]);
-  protected readonly statuses = signal<string[]>([]);
   protected readonly capacities = signal<Record<number, number | null>>({});
   protected readonly selectedTeamId = signal<number | null>(null);
   protected readonly dirty = signal(false);
   protected readonly saving = signal(false);
   protected readonly saved = signal(false);
+  protected readonly syncing = signal(false);
 
   // Excel import drop zone state.
   protected readonly droppedFile = signal<File | null>(null);
@@ -89,8 +89,7 @@ export class PipDetail implements AfterViewInit {
   @ViewChild(MatSort) private sort!: MatSort;
 
   constructor() {
-    this.service.requirementStatuses().subscribe((s) => this.statuses.set(s));
-    this.load();
+    this.loadAndSync();
   }
 
   ngAfterViewInit(): void {
@@ -113,6 +112,14 @@ export class PipDetail implements AfterViewInit {
     this.dataSource.sort = this.sort;
   }
 
+  /** Load cached DB data immediately, then trigger a JIRA sync in the background. */
+  private loadAndSync(): void {
+    this.service.getDetail(this.pipId).subscribe((detail) => {
+      this.apply(detail);
+      this.syncJira();
+    });
+  }
+
   private load(): void {
     this.service.getDetail(this.pipId).subscribe((detail) => this.apply(detail));
   }
@@ -125,6 +132,39 @@ export class PipDetail implements AfterViewInit {
     this.dataSource.data = detail.requirements;
     // Default selection is "All" (null): the summary cards show global figures.
     this.dirty.set(false);
+  }
+
+  /** Synchronise JIRA statuses for all requirements of the PIP, then reload. */
+  protected syncJira(): void {
+    this.syncing.set(true);
+    this.service.syncJira(this.pipId).subscribe({
+      next: (result) => {
+        this.syncing.set(false);
+        if (result.failed > 0) {
+          this.toast(`JIRA sync: ${result.failed} error(s) — ${result.errors.slice(0, 3).join(', ')}`);
+        }
+        this.load();
+      },
+      error: () => {
+        this.syncing.set(false);
+        this.toast('JIRA synchronisation failed.');
+      }
+    });
+  }
+
+  /** Open a JIRA ticket URL in a new tab. */
+  protected openInJira(url: string | null): void {
+    if (url) {
+      window.open(url, '_blank', 'noopener');
+    }
+  }
+
+  /**
+   * Converts a JIRA status name to a CSS-safe class suffix.
+   * "In Progress" → "IN_PROGRESS", "To Do" → "TO_DO".
+   */
+  protected normalizeStatus(status: string | null): string {
+    return status ? status.toUpperCase().replace(/\s+/g, '_') : '';
   }
 
   protected markDirty(): void {
@@ -293,7 +333,6 @@ export class PipDetail implements AfterViewInit {
         id: row.id,
         tcmDescription: row.tcmDescription,
         description: row.description,
-        status: row.status,
         pmComment: row.pmComment,
         workloads: row.workloads,
         comments: row.comments

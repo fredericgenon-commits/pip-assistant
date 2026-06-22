@@ -13,11 +13,13 @@ public record PipDetailResponse(
         List<RequirementRowResponse> requirements,
         Map<Long, BigDecimal> capacities) {
 
-    public static PipDetailResponse from(PipDetailView view) {
+    public static PipDetailResponse from(PipDetailView view, String jiraBaseUrl) {
         return new PipDetailResponse(
                 PipResponse.from(view.pip()),
                 view.teams().stream().map(TeamResponse::from).toList(),
-                view.requirements().stream().map(RequirementRowResponse::from).toList(),
+                view.requirements().stream()
+                        .map(r -> RequirementRowResponse.from(r, jiraBaseUrl))
+                        .toList(),
                 view.capacities());
     }
 }

@@ -12,6 +12,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.utmost.lu.pipassistant.application.ImportExcelService;
 import com.utmost.lu.pipassistant.application.InvalidExcelFileException;
+import com.utmost.lu.pipassistant.application.JiraSyncService;
+import com.utmost.lu.pipassistant.application.PipDetailService;
+import com.utmost.lu.pipassistant.infrastructure.config.JiraProperties;
 import com.utmost.lu.pipassistant.infrastructure.web.dto.PipDetailResponse;
 
 /** REST API for the Excel import on the PIP Details screen. */
@@ -20,12 +23,24 @@ import com.utmost.lu.pipassistant.infrastructure.web.dto.PipDetailResponse;
 public class PipImportController {
 
     private final ImportExcelService importExcelService;
+    private final JiraSyncService jiraSyncService;
+    private final PipDetailService pipDetailService;
+    private final JiraProperties jiraProperties;
 
-    public PipImportController(ImportExcelService importExcelService) {
+    public PipImportController(ImportExcelService importExcelService,
+                               JiraSyncService jiraSyncService,
+                               PipDetailService pipDetailService,
+                               JiraProperties jiraProperties) {
         this.importExcelService = importExcelService;
+        this.jiraSyncService = jiraSyncService;
+        this.pipDetailService = pipDetailService;
+        this.jiraProperties = jiraProperties;
     }
 
-    /** Import a PM planning file into the PIP; returns the refreshed detail. */
+    /**
+     * Import a PM planning file into the PIP. After parsing and versioning the Excel,
+     * the JIRA status is synchronised for all requirements; returns the refreshed detail.
+     */
     @PostMapping("/pips/{id}/imports")
     public PipDetailResponse importExcel(@PathVariable("id") Long id,
                                          @RequestParam("file") MultipartFile file) {
@@ -33,10 +48,11 @@ public class PipImportController {
             throw new InvalidExcelFileException("The uploaded file is empty.");
         }
         try (InputStream content = file.getInputStream()) {
-            return PipDetailResponse.from(
-                    importExcelService.importFile(id, file.getOriginalFilename(), content));
+            importExcelService.importFile(id, file.getOriginalFilename(), content);
         } catch (IOException e) {
             throw new InvalidExcelFileException("Unable to read the uploaded file.", e);
         }
+        jiraSyncService.sync(id);
+        return PipDetailResponse.from(pipDetailService.getDetail(id), jiraProperties.getBaseUrl());
     }
 }
