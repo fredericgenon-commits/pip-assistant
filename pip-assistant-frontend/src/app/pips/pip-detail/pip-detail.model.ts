@@ -25,6 +25,20 @@ export interface RequirementRow {
   workloads: Record<number, string>;
   /** team id -> dev comment */
   comments: Record<number, string>;
+  /** team id -> true when the cell is owned by the JIRA sync (read-only). */
+  jiraLocked: Record<number, boolean>;
+  /** team id -> JIRA-computed Team Status (absent when no data). */
+  teamStatuses: Record<number, string>;
+}
+
+export interface JiraSyncResult {
+  synced: number;
+  failed: number;
+  errors: string[];
+}
+
+export interface JiraSyncSettings {
+  interactionThresholdSeconds: number;
 }
 
 export interface PipDetail {

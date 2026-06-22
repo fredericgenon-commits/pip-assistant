@@ -38,7 +38,7 @@ class PipImportControllerTest {
     private static PipDetailView view() {
         Pip pip = new Pip(1L, PipCode.of("26_PIP_1"), null, null, PipStatus.PREPARATION);
         var row = new PipDetailView.RequirementRow(7L, 5L, "TCM-1", "tcm", "REQ-1",
-                "req", "TODO", "pm", 1, "NEW", Map.of(10L, "3"), Map.of());
+                "req", "TODO", "pm", 1, "NEW", Map.of(10L, "3"), Map.of(), Map.of(), Map.of());
         return new PipDetailView(pip, List.of(new Team(10L, "Core")), List.of(row), Map.of());
     }
 

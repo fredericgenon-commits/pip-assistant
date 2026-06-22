@@ -4,7 +4,7 @@ import { Observable, of } from 'rxjs';
 
 import { PipDetail } from './pip-detail';
 import { PipDetailService } from './pip-detail.service';
-import { PipDetail as PipDetailModel, SavePipDetailPayload } from './pip-detail.model';
+import { JiraSyncResult, JiraSyncSettings, PipDetail as PipDetailModel, SavePipDetailPayload } from './pip-detail.model';
 
 function detail(): PipDetailModel {
   return {
@@ -25,7 +25,9 @@ function detail(): PipDetailModel {
         priority: 1,
         pipStatus: 'NEW',
         workloads: { 1: '3', 2: '5' },
-        comments: { 1: 'core note' }
+        comments: { 1: 'core note' },
+        jiraLocked: { 1: true },
+        teamStatuses: { 1: 'TA todo' }
       }
     ],
     capacities: { 1: 10 }
@@ -49,6 +51,8 @@ describe('PipDetail', () => {
     const serviceStub: Partial<PipDetailService> = {
       getDetail: () => of(detail()),
       requirementStatuses: () => of(['TODO', 'IN_PROGRESS', 'DONE']),
+      getSyncSettings: (): Observable<JiraSyncSettings> => of({ interactionThresholdSeconds: 60 }),
+      syncJira: (): Observable<JiraSyncResult> => of({ synced: 1, failed: 0, errors: [] }),
       save: (pipId: number, payload: SavePipDetailPayload): Observable<void> => {
         saveCalls.push({ pipId, payload });
         return of(undefined);

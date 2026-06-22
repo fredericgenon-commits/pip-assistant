@@ -16,7 +16,11 @@ public record RequirementRowResponse(
         Integer priority,
         String pipStatus,
         Map<Long, String> workloads,
-        Map<Long, String> comments) {
+        Map<Long, String> comments,
+        /** team id -> true when the cell is owned by the JIRA sync (read-only in the UI) */
+        Map<Long, Boolean> jiraLocked,
+        /** team id -> JIRA-computed Team Status (null entries omitted) */
+        Map<Long, String> teamStatuses) {
 
     public static RequirementRowResponse from(PipDetailView.RequirementRow row) {
         return new RequirementRowResponse(
@@ -30,6 +34,8 @@ public record RequirementRowResponse(
                 row.priority(),
                 row.pipStatus(),
                 row.workloads(),
-                row.comments());
+                row.comments(),
+                row.jiraLocked(),
+                row.teamStatuses());
     }
 }

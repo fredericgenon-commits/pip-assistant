@@ -19,6 +19,7 @@ import com.utmost.lu.pipassistant.domain.model.Team;
 import com.utmost.lu.pipassistant.domain.model.Workload;
 import com.utmost.lu.pipassistant.domain.port.PipDetailRepository;
 import com.utmost.lu.pipassistant.domain.port.PipRepository;
+import com.utmost.lu.pipassistant.domain.port.RequirementBacklogRepository;
 import com.utmost.lu.pipassistant.domain.port.TeamRepository;
 
 /**
@@ -32,16 +33,19 @@ public class PipDetailService {
     private final PipDetailRepository detailRepository;
     private final TeamRepository teamRepository;
     private final RequirementStatusCatalog statusCatalog;
+    private final RequirementBacklogRepository backlogRepository;
 
     public PipDetailService(
             PipRepository pipRepository,
             PipDetailRepository detailRepository,
             TeamRepository teamRepository,
-            RequirementStatusCatalog statusCatalog) {
+            RequirementStatusCatalog statusCatalog,
+            RequirementBacklogRepository backlogRepository) {
         this.pipRepository = pipRepository;
         this.detailRepository = detailRepository;
         this.teamRepository = teamRepository;
         this.statusCatalog = statusCatalog;
+        this.backlogRepository = backlogRepository;
     }
 
     public List<String> requirementStatuses() {
@@ -56,11 +60,24 @@ public class PipDetailService {
         Map<Long, Project> projectsById = detailRepository.findProjectsByPip(pipId).stream()
                 .collect(Collectors.toMap(Project::id, Function.identity()));
 
-        Map<Long, Map<Long, String>> workloadsByRequirement = detailRepository
-                .findWorkloadsByPip(pipId).stream()
+        List<Workload> allWorkloads = detailRepository.findWorkloadsByPip(pipId);
+
+        Map<Long, Map<Long, String>> workloadsByRequirement = allWorkloads.stream()
                 .filter(w -> w.tbd() || w.estimate() != null)
                 .collect(Collectors.groupingBy(Workload::requirementId,
                         Collectors.toMap(Workload::teamId, PipDetailService::cellText)));
+
+        Map<Long, Map<Long, Boolean>> jiraLockedByRequirement = allWorkloads.stream()
+                .filter(Workload::jiraLocked)
+                .collect(Collectors.groupingBy(Workload::requirementId,
+                        Collectors.toMap(Workload::teamId, w -> Boolean.TRUE)));
+
+        Map<Long, Map<Long, String>> teamStatusesByRequirement = backlogRepository.findByPip(pipId).stream()
+                .filter(e -> e.teamStatus() != null)
+                .collect(Collectors.groupingBy(RequirementBacklogRepository.TeamBacklogEntry::requirementId,
+                        Collectors.toMap(
+                                RequirementBacklogRepository.TeamBacklogEntry::teamId,
+                                RequirementBacklogRepository.TeamBacklogEntry::teamStatus)));
 
         Map<Long, Map<Long, String>> commentsByRequirement = detailRepository
                 .findDevCommentsByPip(pipId).stream()
@@ -82,7 +99,9 @@ public class PipDetailService {
                             req.priority(),
                             req.pipStatus(),
                             workloadsByRequirement.getOrDefault(req.id(), Map.of()),
-                            commentsByRequirement.getOrDefault(req.id(), Map.of()));
+                            commentsByRequirement.getOrDefault(req.id(), Map.of()),
+                            jiraLockedByRequirement.getOrDefault(req.id(), Map.of()),
+                            teamStatusesByRequirement.getOrDefault(req.id(), Map.of()));
                 })
                 // Default order = priority ascending; requirements removed from the PIP
                 // (null priority) sink to the bottom, ordered by REQ key.

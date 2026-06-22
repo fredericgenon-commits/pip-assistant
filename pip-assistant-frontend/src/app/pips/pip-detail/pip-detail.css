@@ -406,3 +406,25 @@
   color: var(--ink-muted);
   font-size: 13px;
 }
+
+/* ---------- JIRA sync label ---------- */
+.sync-label {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  align-self: center;
+}
+
+/* ---------- Team Status badge ---------- */
+.team-status-badge {
+  display: inline-block;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.team-status-badge--ta-todo          { background: #ffd6d6; color: #b00000; }
+.team-status-badge--ta-ongoing       { background: #d6e8ff; color: #003880; }
+.team-status-badge--to-be-estimated  { background: #fff0d6; color: #7a4000; }
+.team-status-badge--ready            { background: #d6f0e0; color: #005a20; }
+.team-status-badge--done             { background: #e8e8e8; color: #444444; }

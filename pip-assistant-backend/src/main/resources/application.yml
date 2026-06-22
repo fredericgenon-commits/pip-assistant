@@ -42,6 +42,24 @@ management:
 
 # Application-specific configuration.
 pip:
+  jira:
+    base-url: ${JIRA_BASE_URL:https://jira.example.com}
+    api-token: ${JIRA_API_TOKEN:}
+    sync-ttl-minutes: 10
+    interaction-sync-threshold-seconds: 60
+    field:
+      delivery-method: customfield_10000
+      team: customfield_10001
+      story-points: customfield_10016
+    # Maps JIRA "team" field values to system team names (Core, Portal, etc.).
+    # Override via environment variables when connecting to a real JIRA instance.
+    team-mapping:
+      Core: Core
+      Portal: Portal
+      Process: Process
+      Assets: Assets
+      API: API
+      Document: Document
   requirement:
     # Allowed requirement statuses (configurable; restart to apply).
     statuses:

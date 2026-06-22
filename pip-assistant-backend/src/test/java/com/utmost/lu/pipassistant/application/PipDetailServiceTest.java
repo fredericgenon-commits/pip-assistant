@@ -29,6 +29,7 @@ import com.utmost.lu.pipassistant.domain.model.Team;
 import com.utmost.lu.pipassistant.domain.model.Workload;
 import com.utmost.lu.pipassistant.domain.port.PipDetailRepository;
 import com.utmost.lu.pipassistant.domain.port.PipRepository;
+import com.utmost.lu.pipassistant.domain.port.RequirementBacklogRepository;
 import com.utmost.lu.pipassistant.domain.port.TeamRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,9 +39,10 @@ class PipDetailServiceTest {
     @Mock private PipDetailRepository detailRepository;
     @Mock private TeamRepository teamRepository;
     @Mock private RequirementStatusCatalog statusCatalog;
+    @Mock private RequirementBacklogRepository backlogRepository;
 
     private PipDetailService service() {
-        return new PipDetailService(pipRepository, detailRepository, teamRepository, statusCatalog);
+        return new PipDetailService(pipRepository, detailRepository, teamRepository, statusCatalog, backlogRepository);
     }
 
     private static Pip pip(long id) {
@@ -56,11 +58,12 @@ class PipDetailServiceTest {
         when(detailRepository.findRequirementsByPip(1L))
                 .thenReturn(List.of(new Requirement(7L, "REQ-1", "req desc", "TODO", "pm", 5L, 1, "NEW")));
         when(detailRepository.findWorkloadsByPip(1L))
-                .thenReturn(List.of(new Workload(7L, 10L, new BigDecimal("3.5"), false)));
+                .thenReturn(List.of(new Workload(7L, 10L, new BigDecimal("3.5"), false, false)));
         when(detailRepository.findDevCommentsByPip(1L))
                 .thenReturn(List.of(new DevComment(7L, 10L, "dev note")));
         when(detailRepository.findCapacitiesByPip(1L))
                 .thenReturn(List.of(new PipCapacity(1L, 10L, new BigDecimal("20"))));
+        when(backlogRepository.findByPip(1L)).thenReturn(List.of());
 
         PipDetailView view = service().getDetail(1L);
 
