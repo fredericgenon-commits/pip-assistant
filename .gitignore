@@ -61,6 +61,8 @@ test-data/
 
 # ===== Local H2 file database (dev) =====
 pip-assistant-backend/data/
+# Root-level H2 dev database (created when the backend runs from the repo root).
+/data/
 
 # ===== Local run artifacts (start-app skill) =====
 # PIDs and server logs from start/restart.ps1 — runtime only, never commit.
