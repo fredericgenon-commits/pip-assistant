@@ -4,7 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -23,6 +25,7 @@ import com.utmost.lu.pipassistant.domain.model.Requirement;
 import com.utmost.lu.pipassistant.domain.port.JiraPort;
 import com.utmost.lu.pipassistant.domain.port.PipDetailRepository;
 import com.utmost.lu.pipassistant.domain.port.PipRepository;
+import com.utmost.lu.pipassistant.infrastructure.config.JiraProperties;
 
 @ExtendWith(MockitoExtension.class)
 class JiraSyncServiceTest {
@@ -30,9 +33,12 @@ class JiraSyncServiceTest {
     @Mock private JiraPort jiraPort;
     @Mock private PipDetailRepository detailRepository;
     @Mock private PipRepository pipRepository;
+    @Mock private JiraProperties jiraProperties;
 
     private JiraSyncService service() {
-        return new JiraSyncService(jiraPort, detailRepository, pipRepository);
+        // lenient: getSyncTtlMinutes() is only reached when lastSyncTimes already has an entry
+        lenient().when(jiraProperties.getSyncTtlMinutes()).thenReturn(15);
+        return new JiraSyncService(jiraPort, detailRepository, pipRepository, jiraProperties);
     }
 
     private static Pip pip(long id) {
@@ -108,5 +114,21 @@ class JiraSyncServiceTest {
 
         assertThat(result.synced()).isEqualTo(0);
         assertThat(result.failed()).isEqualTo(0);
+    }
+
+    @Test
+    void sync_skipsJiraWhenSyncedRecently() {
+        when(pipRepository.findById(1L)).thenReturn(Optional.of(pip(1L)));
+        when(detailRepository.findRequirementsByPip(1L)).thenReturn(List.of(req(7L, "REQ-1")));
+        when(jiraPort.fetchStatus("REQ-1")).thenReturn(Optional.of("Done"));
+
+        JiraSyncService svc = service();
+        svc.sync(1L);  // first call — hits JIRA
+        JiraSyncResult second = svc.sync(1L);  // second call within TTL — skipped
+
+        verify(jiraPort, times(1)).fetchStatus("REQ-1");
+        assertThat(second.synced()).isEqualTo(0);
+        assertThat(second.failed()).isEqualTo(0);
+        assertThat(second.errors()).isEmpty();
     }
 }

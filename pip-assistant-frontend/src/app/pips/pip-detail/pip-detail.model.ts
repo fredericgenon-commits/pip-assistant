@@ -45,6 +45,10 @@ export interface JiraSyncResult {
   errors: string[];
 }
 
+export interface JiraSyncSettings {
+  interactionThresholdSeconds: number;
+}
+
 export interface SavePipDetailPayload {
   requirements: Array<{
     id: number;

@@ -1,13 +1,15 @@
-import { AfterViewInit, Component, ViewChild, computed, inject, signal } from '@angular/core';
+import { AfterViewInit, Component, DestroyRef, HostListener, ViewChild, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { NgClass } from '@angular/common';
+import { DatePipe, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { interval } from 'rxjs';
 
 import { PipDetailService } from './pip-detail.service';
-import { PipDetail as PipDetailData, PipInfo, RequirementRow, TeamRef } from './pip-detail.model';
+import { JiraSyncSettings, PipDetail as PipDetailData, PipInfo, RequirementRow, TeamRef } from './pip-detail.model';
 
 // Order matches the design: the first 9 columns form the "Exigences" group.
 const TEXT_COLUMNS = [
@@ -45,7 +47,7 @@ const PIP_STATUS_KEYS: Record<string, string> = {
 
 @Component({
   selector: 'app-pip-detail',
-  imports: [RouterLink, NgClass, FormsModule, MatTableModule, MatSortModule, MatSnackBarModule],
+  imports: [RouterLink, NgClass, DatePipe, FormsModule, MatTableModule, MatSortModule, MatSnackBarModule],
   templateUrl: './pip-detail.html',
   styleUrl: './pip-detail.css'
 })
@@ -53,8 +55,12 @@ export class PipDetail implements AfterViewInit {
   private readonly service = inject(PipDetailService);
   private readonly route = inject(ActivatedRoute);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly destroyRef = inject(DestroyRef);
 
   private readonly pipId = Number(this.route.snapshot.paramMap.get('id'));
+
+  private syncInProgress = false;
+  private interactionThresholdMs = 30_000;
 
   protected readonly pip = signal<PipInfo | null>(null);
   protected readonly teams = signal<TeamRef[]>([]);
@@ -63,7 +69,7 @@ export class PipDetail implements AfterViewInit {
   protected readonly dirty = signal(false);
   protected readonly saving = signal(false);
   protected readonly saved = signal(false);
-  protected readonly syncing = signal(false);
+  protected readonly lastSyncedAt = signal<Date | null>(null);
 
   // Excel import drop zone state.
   protected readonly droppedFile = signal<File | null>(null);
@@ -89,7 +95,23 @@ export class PipDetail implements AfterViewInit {
   @ViewChild(MatSort) private sort!: MatSort;
 
   constructor() {
+    this.service.getSyncSettings().subscribe((s: JiraSyncSettings) => {
+      this.interactionThresholdMs = s.interactionThresholdSeconds * 1000;
+    });
     this.loadAndSync();
+    interval(10 * 60 * 1000)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.syncJira());
+  }
+
+  @HostListener('click')
+  @HostListener('keydown')
+  @HostListener('input')
+  protected onUserInteraction(): void {
+    const last = this.lastSyncedAt();
+    if (!last || (Date.now() - last.getTime()) > this.interactionThresholdMs) {
+      this.syncJira();
+    }
   }
 
   ngAfterViewInit(): void {
@@ -134,19 +156,21 @@ export class PipDetail implements AfterViewInit {
     this.dirty.set(false);
   }
 
-  /** Synchronise JIRA statuses for all requirements of the PIP, then reload. */
-  protected syncJira(): void {
-    this.syncing.set(true);
+  /** Synchronise JIRA statuses for all requirements of the PIP silently, then reload. */
+  private syncJira(): void {
+    if (this.syncInProgress) return;
+    this.syncInProgress = true;
     this.service.syncJira(this.pipId).subscribe({
       next: (result) => {
-        this.syncing.set(false);
+        this.syncInProgress = false;
+        this.lastSyncedAt.set(new Date());
         if (result.failed > 0) {
           this.toast(`JIRA sync: ${result.failed} error(s) — ${result.errors.slice(0, 3).join(', ')}`);
         }
         this.load();
       },
       error: () => {
-        this.syncing.set(false);
+        this.syncInProgress = false;
         this.toast('JIRA synchronisation failed.');
       }
     });

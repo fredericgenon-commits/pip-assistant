@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-import { JiraSyncResult, PipDetail, SavePipDetailPayload } from './pip-detail.model';
+import { JiraSyncResult, JiraSyncSettings, PipDetail, SavePipDetailPayload } from './pip-detail.model';
 
 /** Calls the PIP detail API (aggregated read, bulk save, JIRA sync). */
 @Injectable({ providedIn: 'root' })
@@ -27,5 +27,10 @@ export class PipDetailService {
   /** Trigger a JIRA status sync for all requirements of the PIP. */
   syncJira(pipId: number): Observable<JiraSyncResult> {
     return this.http.post<JiraSyncResult>(`/api/pips/${pipId}/jira-sync`, {});
+  }
+
+  /** Fetch JIRA sync configuration values from the backend. */
+  getSyncSettings(): Observable<JiraSyncSettings> {
+    return this.http.get<JiraSyncSettings>('/api/jira-sync-settings');
   }
 }

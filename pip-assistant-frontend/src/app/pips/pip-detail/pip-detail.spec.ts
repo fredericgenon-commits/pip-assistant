@@ -4,7 +4,7 @@ import { Observable, of } from 'rxjs';
 
 import { PipDetail } from './pip-detail';
 import { PipDetailService } from './pip-detail.service';
-import { JiraSyncResult, PipDetail as PipDetailModel, SavePipDetailPayload } from './pip-detail.model';
+import { JiraSyncResult, JiraSyncSettings, PipDetail as PipDetailModel, SavePipDetailPayload } from './pip-detail.model';
 
 function detail(): PipDetailModel {
   return {
@@ -52,6 +52,7 @@ describe('PipDetail', () => {
     syncCalls = [];
     const serviceStub: Partial<PipDetailService> = {
       getDetail: () => of(detail()),
+      getSyncSettings: (): Observable<JiraSyncSettings> => of({ interactionThresholdSeconds: 30 }),
       syncJira: (pipId: number): Observable<JiraSyncResult> => {
         syncCalls.push(pipId);
         return of({ synced: 1, failed: 0, errors: [] });
@@ -87,12 +88,13 @@ describe('PipDetail', () => {
     expect(fixture.componentInstance['total'](1)).toBe(3);
   });
 
-  it('calls syncJira on initial load', () => {
+  it('calls syncJira on initial load and sets lastSyncedAt', () => {
     const fixture = TestBed.createComponent(PipDetail);
     fixture.detectChanges();
 
     expect(syncCalls.length).toBeGreaterThan(0);
     expect(syncCalls[0]).toBe(1);
+    expect(fixture.componentInstance['lastSyncedAt']()).not.toBeNull();
   });
 
   it('filters the summary count by the selected team', () => {
@@ -163,5 +165,30 @@ describe('PipDetail', () => {
     expect(c['normalizeStatus']('To Do')).toBe('TO_DO');
     expect(c['normalizeStatus']('Done')).toBe('DONE');
     expect(c['normalizeStatus'](null)).toBe('');
+  });
+
+  it('triggers syncJira on user interaction when last sync is stale', () => {
+    const fixture = TestBed.createComponent(PipDetail);
+    fixture.detectChanges();
+
+    const before = syncCalls.length;
+    // Simulate stale last sync (older than threshold)
+    fixture.componentInstance['lastSyncedAt'].set(new Date(Date.now() - 35_000));
+
+    fixture.nativeElement.click();
+
+    expect(syncCalls.length).toBeGreaterThan(before);
+  });
+
+  it('does not trigger syncJira on user interaction when last sync is recent', () => {
+    const fixture = TestBed.createComponent(PipDetail);
+    fixture.detectChanges();
+
+    const before = syncCalls.length;
+    // lastSyncedAt is already set to now by the initial load
+
+    fixture.nativeElement.click();
+
+    expect(syncCalls.length).toBe(before);
   });
 });

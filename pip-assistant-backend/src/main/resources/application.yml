@@ -47,6 +47,8 @@ pip:
     # Set SPRING_PROFILES_ACTIVE=jira-mock to run locally without a real JIRA connection.
     base-url: ${JIRA_BASE_URL:https://jira.example.com}
     api-token: ${JIRA_API_TOKEN:}
+    sync-ttl-minutes: 10                    # min interval between two JIRA syncs for the same PIP (in-memory guard)
+    interaction-sync-threshold-seconds: 60  # if last sync is older than this, any UI interaction triggers a background sync
   import:
     # Excel layout for the PM planning file. Columns are matched by 0-based POSITION
     # (header labels in the file may differ, e.g. "REQ Title"). Matches the files
