@@ -27,6 +27,10 @@ public record PipDetailView(
             Integer priority,
             String pipStatus,
             Map<Long, String> workloads,
-            Map<Long, String> comments) {
+            Map<Long, String> comments,
+            /** team id -> true when the cell is owned by the JIRA sync (read-only in the UI) */
+            Map<Long, Boolean> jiraLocked,
+            /** team id -> JIRA-computed Team Status (null when no data) */
+            Map<Long, String> teamStatuses) {
     }
 }

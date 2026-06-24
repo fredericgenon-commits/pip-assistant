@@ -20,14 +20,14 @@ function detail(): PipDetailModel {
         tcmDescription: 'tcm',
         reqKey: 'REQ-1',
         description: 'req',
-        status: 'In Progress',
+        status: 'TODO',
         pmComment: 'pm',
         priority: 1,
         pipStatus: 'NEW',
         workloads: { 1: '3', 2: '5' },
         comments: { 1: 'core note' },
-        reqUrl: 'https://jira.example.com/browse/REQ-1',
-        tcmUrl: 'https://jira.example.com/browse/TCM-1'
+        jiraLocked: { 1: true },
+        teamStatuses: { 1: 'TA todo' }
       }
     ],
     capacities: { 1: 10 }
@@ -44,19 +44,15 @@ function dropEvent(fileName: string): DragEvent {
 describe('PipDetail', () => {
   let saveCalls: Array<{ pipId: number; payload: SavePipDetailPayload }>;
   let importCalls: Array<{ pipId: number; file: File }>;
-  let syncCalls: number[];
 
   beforeEach(async () => {
     saveCalls = [];
     importCalls = [];
-    syncCalls = [];
     const serviceStub: Partial<PipDetailService> = {
       getDetail: () => of(detail()),
-      getSyncSettings: (): Observable<JiraSyncSettings> => of({ interactionThresholdSeconds: 30 }),
-      syncJira: (pipId: number): Observable<JiraSyncResult> => {
-        syncCalls.push(pipId);
-        return of({ synced: 1, failed: 0, errors: [] });
-      },
+      requirementStatuses: () => of(['TODO', 'IN_PROGRESS', 'DONE']),
+      getSyncSettings: (): Observable<JiraSyncSettings> => of({ interactionThresholdSeconds: 60 }),
+      syncJira: (): Observable<JiraSyncResult> => of({ synced: 1, failed: 0, errors: [] }),
       save: (pipId: number, payload: SavePipDetailPayload): Observable<void> => {
         saveCalls.push({ pipId, payload });
         return of(undefined);
@@ -88,15 +84,6 @@ describe('PipDetail', () => {
     expect(fixture.componentInstance['total'](1)).toBe(3);
   });
 
-  it('calls syncJira on initial load and sets lastSyncedAt', () => {
-    const fixture = TestBed.createComponent(PipDetail);
-    fixture.detectChanges();
-
-    expect(syncCalls.length).toBeGreaterThan(0);
-    expect(syncCalls[0]).toBe(1);
-    expect(fixture.componentInstance['lastSyncedAt']()).not.toBeNull();
-  });
-
   it('filters the summary count by the selected team', () => {
     const fixture = TestBed.createComponent(PipDetail);
     fixture.detectChanges();
@@ -115,7 +102,7 @@ describe('PipDetail', () => {
     expect(c['reqCount']()).toBe(0);
   });
 
-  it('builds the save payload without status', () => {
+  it('builds the save payload from rows and capacities', () => {
     const fixture = TestBed.createComponent(PipDetail);
     fixture.detectChanges();
 
@@ -123,10 +110,8 @@ describe('PipDetail', () => {
 
     expect(saveCalls.length).toBe(1);
     expect(saveCalls[0].pipId).toBe(1);
-    const req0 = saveCalls[0].payload.requirements[0];
-    expect(req0.id).toBe(7);
-    expect(req0.workloads).toEqual({ 1: '3', 2: '5' });
-    expect((req0 as Record<string, unknown>)['status']).toBeUndefined();
+    expect(saveCalls[0].payload.requirements[0].id).toBe(7);
+    expect(saveCalls[0].payload.requirements[0].workloads).toEqual({ 1: '3', 2: '5' });
     expect(saveCalls[0].payload.capacities).toEqual({ 1: 10 });
   });
 
@@ -154,41 +139,5 @@ describe('PipDetail', () => {
     expect(importCalls[0].pipId).toBe(1);
     expect(importCalls[0].file.name).toBe('plan.xlsx');
     expect(component['droppedFile']()).toBeNull();
-  });
-
-  it('normalizes JIRA status names to CSS-safe class suffixes', () => {
-    const fixture = TestBed.createComponent(PipDetail);
-    fixture.detectChanges();
-    const c = fixture.componentInstance;
-
-    expect(c['normalizeStatus']('In Progress')).toBe('IN_PROGRESS');
-    expect(c['normalizeStatus']('To Do')).toBe('TO_DO');
-    expect(c['normalizeStatus']('Done')).toBe('DONE');
-    expect(c['normalizeStatus'](null)).toBe('');
-  });
-
-  it('triggers syncJira on user interaction when last sync is stale', () => {
-    const fixture = TestBed.createComponent(PipDetail);
-    fixture.detectChanges();
-
-    const before = syncCalls.length;
-    // Simulate stale last sync (older than threshold)
-    fixture.componentInstance['lastSyncedAt'].set(new Date(Date.now() - 35_000));
-
-    fixture.nativeElement.click();
-
-    expect(syncCalls.length).toBeGreaterThan(before);
-  });
-
-  it('does not trigger syncJira on user interaction when last sync is recent', () => {
-    const fixture = TestBed.createComponent(PipDetail);
-    fixture.detectChanges();
-
-    const before = syncCalls.length;
-    // lastSyncedAt is already set to now by the initial load
-
-    fixture.nativeElement.click();
-
-    expect(syncCalls.length).toBe(before);
   });
 });

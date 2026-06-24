@@ -43,12 +43,30 @@ management:
 # Application-specific configuration.
 pip:
   jira:
-    # JIRA Server / Data Center base URL and Personal Access Token.
-    # Set SPRING_PROFILES_ACTIVE=jira-mock to run locally without a real JIRA connection.
     base-url: ${JIRA_BASE_URL:https://jira.example.com}
     api-token: ${JIRA_API_TOKEN:}
-    sync-ttl-minutes: 10                    # min interval between two JIRA syncs for the same PIP (in-memory guard)
-    interaction-sync-threshold-seconds: 60  # if last sync is older than this, any UI interaction triggers a background sync
+    sync-ttl-minutes: 10
+    interaction-sync-threshold-seconds: 60
+    field:
+      delivery-method: customfield_10000
+      team: customfield_10001
+      story-points: customfield_10016
+    # Maps JIRA "team" field values to system team names (Core, Portal, etc.).
+    # Override via environment variables when connecting to a real JIRA instance.
+    team-mapping:
+      Core: Core
+      Portal: Portal
+      Process: Process
+      Assets: Assets
+      API: API
+      Document: Document
+  requirement:
+    # Allowed requirement statuses (configurable; restart to apply).
+    # Values must match what the JIRA sync writes (raw JIRA status names).
+    statuses:
+      - To Do
+      - In Progress
+      - Done
   import:
     # Excel layout for the PM planning file. Columns are matched by 0-based POSITION
     # (header labels in the file may differ, e.g. "REQ Title"). Matches the files

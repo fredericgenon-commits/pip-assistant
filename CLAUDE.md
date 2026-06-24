@@ -130,3 +130,11 @@ next number. Keep this history up to date as part of finishing a task.
   accepts **`TBD`** ("To Be Defined") — persisted full-stack via a `workload.tbd` flag
   (Flyway `V5`); detail API carries workloads as **cell text** (`Map<Long,String>`), parsed
   on save, and TBD is a manual override that imports never overwrite.
+- **JIRA backlog sync** (`feature/get-req-status-from-jira`): complete. For each REQ,
+  fetches JIRA child DEV stories, computes SP backlog and Team Status per team via the
+  pure domain service `BacklogCalculator`. Results persisted in `requirement_backlog` table
+  (Flyway `V6`). `jira_locked` flag on workload: JIRA overwrites manual value and locks the
+  cell when SP > 0; unlocks when SP drops to 0. Auto-sync: silent 10-min polling + on
+  interaction (threshold 60 s) + immediate on load. "Last synced: HH:mm" label in header.
+  Team Status badge column (before Dev comment). Mock adapter (`@Profile("jira-mock")`) for
+  local dev without a real JIRA server.

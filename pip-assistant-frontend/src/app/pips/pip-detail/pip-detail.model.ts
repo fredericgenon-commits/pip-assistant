@@ -15,7 +15,7 @@ export interface RequirementRow {
   tcmDescription: string;
   reqKey: string;
   description: string;
-  status: string | null;
+  status: string;
   pmComment: string;
   /** 1-based import priority; null when removed from the PIP. */
   priority: number | null;
@@ -25,18 +25,10 @@ export interface RequirementRow {
   workloads: Record<number, string>;
   /** team id -> dev comment */
   comments: Record<number, string>;
-  /** JIRA deep-link for the REQ ticket; null if JIRA is not configured. */
-  reqUrl: string | null;
-  /** JIRA deep-link for the TCM ticket; null if JIRA is not configured. */
-  tcmUrl: string | null;
-}
-
-export interface PipDetail {
-  pip: PipInfo;
-  teams: TeamRef[];
-  requirements: RequirementRow[];
-  /** team id -> capacity */
-  capacities: Record<number, number | null>;
+  /** team id -> true when the cell is owned by the JIRA sync (read-only). */
+  jiraLocked: Record<number, boolean>;
+  /** team id -> JIRA-computed Team Status (absent when no data). */
+  teamStatuses: Record<number, string>;
 }
 
 export interface JiraSyncResult {
@@ -49,11 +41,20 @@ export interface JiraSyncSettings {
   interactionThresholdSeconds: number;
 }
 
+export interface PipDetail {
+  pip: PipInfo;
+  teams: TeamRef[];
+  requirements: RequirementRow[];
+  /** team id -> capacity */
+  capacities: Record<number, number | null>;
+}
+
 export interface SavePipDetailPayload {
   requirements: Array<{
     id: number;
     tcmDescription: string;
     description: string;
+    status: string;
     pmComment: string;
     workloads: Record<number, string>;
     comments: Record<number, string>;

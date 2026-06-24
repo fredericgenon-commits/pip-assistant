@@ -65,7 +65,7 @@ public class PipDetailRepositoryAdapter implements PipDetailRepository {
             return List.of();
         }
         return workloadRepository.findByRequirementIdIn(requirementIds).stream()
-                .map(e -> new Workload(e.getRequirementId(), e.getTeamId(), e.getEstimate(), e.isTbd()))
+                .map(e -> new Workload(e.getRequirementId(), e.getTeamId(), e.getEstimate(), e.isTbd(), e.isJiraLocked()))
                 .toList();
     }
 
@@ -96,18 +96,11 @@ public class PipDetailRepositoryAdapter implements PipDetailRepository {
     }
 
     @Override
-    public void updateRequirement(Long requirementId, String description, String pmComment) {
+    public void updateRequirement(Long requirementId, String description, String status, String pmComment) {
         requirementRepository.findById(requirementId).ifPresent(e -> {
             e.setDescription(description);
-            e.setPmComment(pmComment);
-            requirementRepository.save(e);
-        });
-    }
-
-    @Override
-    public void updateRequirementStatus(Long requirementId, String status) {
-        requirementRepository.findById(requirementId).ifPresent(e -> {
             e.setStatus(status);
+            e.setPmComment(pmComment);
             requirementRepository.save(e);
         });
     }
@@ -124,7 +117,38 @@ public class PipDetailRepositoryAdapter implements PipDetailRepository {
         }
         entity.setEstimate(effectiveEstimate);
         entity.setTbd(tbd);
+        // Never touch jira_locked here — that flag is managed exclusively by the JIRA sync.
         workloadRepository.save(entity);
+    }
+
+    @Override
+    public void upsertWorkloadFromJira(Long requirementId, Long teamId, BigDecimal storyPoints) {
+        WorkloadEntity entity = workloadRepository.findByRequirementIdAndTeamId(requirementId, teamId)
+                .orElseGet(() -> new WorkloadEntity(requirementId, teamId, null));
+        entity.setEstimate(storyPoints);
+        entity.setTbd(false);
+        entity.setJiraLocked(true);
+        entity.setManualOverride(true); // prevent subsequent imports from overwriting JIRA values
+        workloadRepository.save(entity);
+    }
+
+    @Override
+    public void unlockWorkloadFromJira(Long requirementId, Long teamId) {
+        workloadRepository.findByRequirementIdAndTeamId(requirementId, teamId).ifPresent(entity -> {
+            if (entity.isJiraLocked()) {
+                entity.setJiraLocked(false);
+                entity.setManualOverride(false); // allow imports to overwrite again
+                workloadRepository.save(entity);
+            }
+        });
+    }
+
+    @Override
+    public void updateRequirementStatus(Long requirementId, String status) {
+        requirementRepository.findById(requirementId).ifPresent(e -> {
+            e.setStatus(status);
+            requirementRepository.save(e);
+        });
     }
 
     private static boolean numericChanged(BigDecimal current, BigDecimal next) {

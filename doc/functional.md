@@ -238,17 +238,39 @@ Opened by double-clicking a PIP. Title "PIP Details". Shows the PIP **name** and
   workloads, capacities). Requirement statuses are validated against a **configurable list**
   (`application.yml`, default `TODO / IN_PROGRESS / DONE`); an unknown status is rejected (400).
 
-Requirements come from the **Excel import** (below). The grid also shows two import-derived
-read-only columns: **Priority** (first) and **PIP status**.
+Requirements come from the **Excel import** (below). The grid also shows read-only columns
+derived from import or JIRA: **Priority** (first), **PIP status**, and **Team status** (from JIRA).
 
 ```mermaid
 flowchart LR
     G["Requirements grid<br/>(editable, sortable)"] -->|edit cells| G
-    Team["Team select"] -->|drives| DC["Dev comment column"]
+    Team["Team select"] -->|drives| DC["Dev comment + Team status columns"]
     G --> Tot["Total per team (computed, excludes removed)"]
     Cap["Capacity per team (editable)"]
     G -->|Save → 204| G
 ```
+
+#### Team status column
+
+When a team is selected, a **Team status** column (read-only, badge, before "Dev comment")
+shows the computed JIRA status for that team on each requirement. When **All** is selected
+the column shows a dash.
+
+| Badge | Meaning |
+|-------|---------|
+| TA todo | A technical-analysis ticket is open / to be estimated / ready |
+| TA ongoing | A technical-analysis ticket is in progress |
+| To be estimated | At least one DEV ticket is to be estimated |
+| Ready | All DEV tickets are ready for implementation |
+| Done | All DEV tickets are completed |
+| — | No data (no tickets, or all abandoned) |
+
+#### JIRA-locked workload cells
+
+When JIRA computes story points for a (REQ, team) pair, the workload cell is
+**overwritten and locked** — it shows the JIRA total (ready-for-implementation SP only)
+and is no longer editable. The lock is lifted automatically when the JIRA backlog for
+that pair drops back to 0.
 
 ### Excel import (PIP Details)
 
@@ -323,6 +345,33 @@ the layout and the semantic status colours stay identical.
 
 Status colours (PIP `PREPARATION/ACTIVE/CLOSED`, REQ `TODO/IN_PROGRESS/DONE`, and the six
 import-diff states) are theme tokens shared by both screens and both directions.
+
+### JIRA backlog sync
+
+The app silently synchronises each REQ's JIRA backlog in the background:
+
+- **At page load** — a sync fires immediately when PIP Details opens.
+- **Every 10 minutes** — an Angular `interval()` triggers a new sync.
+- **After user interaction** — any click or keystroke triggers a sync if more than 60
+  seconds have elapsed since the last one (threshold configurable in `application.yml`).
+
+A **"Last synced: HH:mm"** label (next to the Save button) appears once the first
+sync completes.
+
+The backend guards against JIRA overload with a **10-minute TTL** per PIP: a second
+request within the window is silently ignored. The counters reset on server restart.
+
+**What is synced per REQ:**
+
+1. The REQ's JIRA status is fetched and stored (drives the REQ status field).
+2. Child DEV stories are fetched (JQL: `issueType=Story AND "Epic Link"={reqKey}`).
+3. The `BacklogCalculator` domain service produces SP totals and Team Status per team,
+   using only tickets whose delivery method is `"project"` and whose team field maps
+   to a known system team (both configurable in `pip.jira`).
+
+**JIRA-sourced workloads replace manual values** — when JIRA computes SP > 0 for a
+(REQ, team), the workload cell is overwritten (`jira_locked = true`). When the JIRA
+backlog drops to 0 the cell is unlocked and future Excel imports may overwrite it again.
 
 ### Team scope & "TBD" workloads
 

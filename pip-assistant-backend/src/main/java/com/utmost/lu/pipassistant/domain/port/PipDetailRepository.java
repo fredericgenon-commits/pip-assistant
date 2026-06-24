@@ -27,9 +27,9 @@ public interface PipDetailRepository {
 
     void updateProjectDescription(Long projectId, String description);
 
-    void updateRequirement(Long requirementId, String description, String pmComment);
+    void updateRequirement(Long requirementId, String description, String status, String pmComment);
 
-    /** Persists the JIRA-sourced status for a single requirement. */
+    /** Updates only the status of a requirement (used by the JIRA sync). */
     void updateRequirementStatus(Long requirementId, String status);
 
     /**
@@ -37,6 +37,19 @@ public interface PipDetailRepository {
      * is marked "To Be Defined" and {@code estimate} is ignored (stored as null).
      */
     void upsertWorkload(Long requirementId, Long teamId, BigDecimal estimate, boolean tbd);
+
+    /**
+     * Write story points from the JIRA backlog sync: sets the estimate, clears TBD, sets
+     * jira_locked=true and manual_override=true (so imports cannot overwrite the JIRA value).
+     */
+    void upsertWorkloadFromJira(Long requirementId, Long teamId, BigDecimal storyPoints);
+
+    /**
+     * Release the JIRA lock on a workload cell when JIRA no longer has RFI tickets for this
+     * (requirement, team) pair: sets jira_locked=false and manual_override=false (so the next
+     * import may overwrite the cell again). Only acts when the cell is currently jira_locked.
+     */
+    void unlockWorkloadFromJira(Long requirementId, Long teamId);
 
     /** Insert or update a team's dev comment on a requirement. */
     void upsertDevComment(Long requirementId, Long teamId, String text);

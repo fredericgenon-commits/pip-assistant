@@ -19,7 +19,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.utmost.lu.pipassistant.application.ImportExcelService;
 import com.utmost.lu.pipassistant.application.InvalidExcelFileException;
-import com.utmost.lu.pipassistant.application.JiraSyncResult;
 import com.utmost.lu.pipassistant.application.JiraSyncService;
 import com.utmost.lu.pipassistant.application.PipDetailService;
 import com.utmost.lu.pipassistant.application.PipDetailView;
@@ -51,7 +50,7 @@ class PipImportControllerTest {
     private static PipDetailView view() {
         Pip pip = new Pip(1L, PipCode.of("26_PIP_1"), null, null, PipStatus.PREPARATION);
         var row = new PipDetailView.RequirementRow(7L, 5L, "TCM-1", "tcm", "REQ-1",
-                "req", "In Progress", "pm", 1, "NEW", Map.of(10L, "3"), Map.of());
+                "req", "TODO", "pm", 1, "NEW", Map.of(10L, "3"), Map.of(), Map.of(), Map.of());
         return new PipDetailView(pip, List.of(new Team(10L, "Core")), List.of(row), Map.of());
     }
 
@@ -62,7 +61,6 @@ class PipImportControllerTest {
 
     @Test
     void importReturnsRefreshedDetail() throws Exception {
-        given(jiraSyncService.sync(1L)).willReturn(new JiraSyncResult(1, 0, List.of()));
         given(pipDetailService.getDetail(1L)).willReturn(view());
 
         mockMvc.perform(multipart("/api/pips/1/imports").file(file()))

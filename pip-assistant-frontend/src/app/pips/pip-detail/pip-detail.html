@@ -21,7 +21,9 @@
         <option [ngValue]="team.id">{{ team.name }}</option>
       }
     </select>
-    @if (lastSyncedAt(); as t) {
+    @if (syncFailed()) {
+      <span class="sync-label sync-label--error">JIRA: connection error</span>
+    } @else if (lastSyncedAt(); as t) {
       <span class="sync-label">Last synced: {{ t | date:'HH:mm' }}</span>
     }
     <button type="button" class="btn btn--primary" [disabled]="!dirty() || saving()" (click)="save()">
@@ -89,7 +91,7 @@
          [dataSource]="dataSource" class="pip-grid">
     <!-- Grouped super-header -->
     <ng-container matColumnDef="groupReq">
-      <th mat-header-cell *matHeaderCellDef [attr.colspan]="9" class="grp grp--req">Requirements</th>
+      <th mat-header-cell *matHeaderCellDef [attr.colspan]="10" class="grp grp--req">Requirements</th>
     </ng-container>
     <ng-container matColumnDef="groupLoad">
       <th mat-header-cell *matHeaderCellDef [attr.colspan]="teams().length" class="grp grp--load">
@@ -149,7 +151,7 @@
     <ng-container matColumnDef="status">
       <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
       <td mat-cell *matCellDef="let row">
-        <span class="req-badge req-badge--{{ normalizeStatus(row.status) }}">{{ row.status || '—' }}</span>
+        <span class="req-badge req-badge--{{ normalizeTeamStatus(row.status) }}">{{ row.status || '—' }}</span>
       </td>
     </ng-container>
 
@@ -158,6 +160,21 @@
       <td mat-cell *matCellDef="let row">
         <input class="cell-input muted" [ngModel]="row.pmComment" [disabled]="isRemoved(row)"
                (ngModelChange)="row.pmComment = $event; markDirty()" />
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="teamStatus">
+      <th mat-header-cell *matHeaderCellDef>Team status{{ selectedTeamName() ? ' · ' + selectedTeamName() : '' }}</th>
+      <td mat-cell *matCellDef="let row">
+        @if (selectedTeamId(); as teamId) {
+          @if (row.teamStatuses[teamId]; as ts) {
+            <span class="team-status-badge team-status-badge--{{ normalizeTeamStatus(ts) }}">{{ ts }}</span>
+          } @else {
+            <span class="cell-hint">—</span>
+          }
+        } @else {
+          <span class="cell-hint">—</span>
+        }
       </td>
     </ng-container>
 
@@ -180,7 +197,7 @@
         <th mat-header-cell *matHeaderCellDef mat-sort-header class="ta-center team-col">{{ teamShort(team.name) }}</th>
         <td mat-cell *matCellDef="let row" class="ta-center team-col">
           <input class="cell-input num" type="text" inputmode="decimal" placeholder="—"
-                 [ngModel]="row.workloads[team.id]" [disabled]="isRemoved(row)"
+                 [ngModel]="row.workloads[team.id]" [disabled]="isRemoved(row) || !!row.jiraLocked[team.id]"
                  (ngModelChange)="row.workloads[team.id] = $event; markDirty()" />
         </td>
         <td mat-footer-cell *matFooterCellDef class="ta-center team-col mono total-cell"
@@ -199,10 +216,10 @@
 
     <!-- Footer labels spanning the non-team columns -->
     <ng-container matColumnDef="totalLabel">
-      <td mat-footer-cell *matFooterCellDef [attr.colspan]="9" class="ta-right foot-label">Total (SP)</td>
+      <td mat-footer-cell *matFooterCellDef [attr.colspan]="10" class="ta-right foot-label">Total (SP)</td>
     </ng-container>
     <ng-container matColumnDef="capLabel">
-      <td mat-footer-cell *matFooterCellDef [attr.colspan]="9" class="ta-right foot-label muted">Capacity (SP)</td>
+      <td mat-footer-cell *matFooterCellDef [attr.colspan]="10" class="ta-right foot-label muted">Capacity (SP)</td>
     </ng-container>
 
     <tr mat-header-row *matHeaderRowDef="groupColumns" class="group-row"></tr>

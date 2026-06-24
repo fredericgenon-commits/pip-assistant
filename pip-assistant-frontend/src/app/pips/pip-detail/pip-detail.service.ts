@@ -24,6 +24,10 @@ export class PipDetailService {
     return this.http.post<PipDetail>(`/api/pips/${pipId}/imports`, form);
   }
 
+  requirementStatuses(): Observable<string[]> {
+    return this.http.get<string[]>('/api/requirement-statuses');
+  }
+
   /** Trigger a JIRA status sync for all requirements of the PIP. */
   syncJira(pipId: number): Observable<JiraSyncResult> {
     return this.http.post<JiraSyncResult>(`/api/pips/${pipId}/jira-sync`, {});

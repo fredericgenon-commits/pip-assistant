@@ -35,6 +35,10 @@ public class WorkloadEntity {
     @Column(name = "manual_override", nullable = false)
     private boolean manualOverride = false;
 
+    /** True when the cell value was written by the JIRA backlog sync (read-only in the UI). */
+    @Column(name = "jira_locked", nullable = false)
+    private boolean jiraLocked = false;
+
     protected WorkloadEntity() {
     }
 
@@ -74,5 +78,13 @@ public class WorkloadEntity {
 
     public void setManualOverride(boolean manualOverride) {
         this.manualOverride = manualOverride;
+    }
+
+    public boolean isJiraLocked() {
+        return jiraLocked;
+    }
+
+    public void setJiraLocked(boolean jiraLocked) {
+        this.jiraLocked = jiraLocked;
     }
 }

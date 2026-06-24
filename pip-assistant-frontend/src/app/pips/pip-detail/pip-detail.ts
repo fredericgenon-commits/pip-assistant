@@ -3,15 +3,15 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DatePipe, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { interval } from 'rxjs';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { interval } from 'rxjs';
 
 import { PipDetailService } from './pip-detail.service';
-import { JiraSyncSettings, PipDetail as PipDetailData, PipInfo, RequirementRow, TeamRef } from './pip-detail.model';
+import { PipDetail as PipDetailData, PipInfo, RequirementRow, TeamRef } from './pip-detail.model';
 
-// Order matches the design: the first 9 columns form the "Exigences" group.
+// Order matches the design: the first 10 columns form the "Exigences" group.
 const TEXT_COLUMNS = [
   'pipStatus',
   'tcmKey',
@@ -20,6 +20,7 @@ const TEXT_COLUMNS = [
   'description',
   'status',
   'pmComment',
+  'teamStatus',
   'devComment'
 ];
 
@@ -47,7 +48,7 @@ const PIP_STATUS_KEYS: Record<string, string> = {
 
 @Component({
   selector: 'app-pip-detail',
-  imports: [RouterLink, NgClass, DatePipe, FormsModule, MatTableModule, MatSortModule, MatSnackBarModule],
+  imports: [RouterLink, NgClass, FormsModule, DatePipe, MatTableModule, MatSortModule, MatSnackBarModule],
   templateUrl: './pip-detail.html',
   styleUrl: './pip-detail.css'
 })
@@ -59,17 +60,20 @@ export class PipDetail implements AfterViewInit {
 
   private readonly pipId = Number(this.route.snapshot.paramMap.get('id'));
 
-  private syncInProgress = false;
-  private interactionThresholdMs = 30_000;
-
   protected readonly pip = signal<PipInfo | null>(null);
   protected readonly teams = signal<TeamRef[]>([]);
+  protected readonly statuses = signal<string[]>([]);
   protected readonly capacities = signal<Record<number, number | null>>({});
   protected readonly selectedTeamId = signal<number | null>(null);
   protected readonly dirty = signal(false);
   protected readonly saving = signal(false);
   protected readonly saved = signal(false);
   protected readonly lastSyncedAt = signal<Date | null>(null);
+  protected readonly syncFailed = signal(false);
+
+  private interactionThresholdMs = 60_000;
+  private lastSyncTs = 0;
+  private syncInProgress = false;
 
   // Excel import drop zone state.
   protected readonly droppedFile = signal<File | null>(null);
@@ -95,23 +99,46 @@ export class PipDetail implements AfterViewInit {
   @ViewChild(MatSort) private sort!: MatSort;
 
   constructor() {
-    this.service.getSyncSettings().subscribe((s: JiraSyncSettings) => {
+    this.service.requirementStatuses().subscribe((s) => this.statuses.set(s));
+    this.service.getSyncSettings().subscribe((s) => {
       this.interactionThresholdMs = s.interactionThresholdSeconds * 1000;
     });
-    this.loadAndSync();
+    this.load();
+    this.syncJira();
     interval(10 * 60 * 1000)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.syncJira());
   }
 
-  @HostListener('click')
-  @HostListener('keydown')
-  @HostListener('input')
+  @HostListener('document:click')
+  @HostListener('document:keydown')
   protected onUserInteraction(): void {
-    const last = this.lastSyncedAt();
-    if (!last || (Date.now() - last.getTime()) > this.interactionThresholdMs) {
+    if (Date.now() - this.lastSyncTs > this.interactionThresholdMs) {
       this.syncJira();
     }
+  }
+
+  private syncJira(): void {
+    if (this.syncInProgress) {
+      return;
+    }
+    this.syncInProgress = true;
+    this.lastSyncTs = Date.now();
+    this.service.syncJira(this.pipId).subscribe({
+      next: (result) => {
+        this.syncInProgress = false;
+        this.syncFailed.set(false);
+        this.lastSyncedAt.set(new Date());
+        if (result.failed > 0) {
+          this.toast(`JIRA sync: ${result.failed} error(s) — ${result.errors.slice(0, 3).join(', ')}`);
+        }
+        this.load();
+      },
+      error: () => {
+        this.syncInProgress = false;
+        this.syncFailed.set(true);
+      }
+    });
   }
 
   ngAfterViewInit(): void {
@@ -134,14 +161,6 @@ export class PipDetail implements AfterViewInit {
     this.dataSource.sort = this.sort;
   }
 
-  /** Load cached DB data immediately, then trigger a JIRA sync in the background. */
-  private loadAndSync(): void {
-    this.service.getDetail(this.pipId).subscribe((detail) => {
-      this.apply(detail);
-      this.syncJira();
-    });
-  }
-
   private load(): void {
     this.service.getDetail(this.pipId).subscribe((detail) => this.apply(detail));
   }
@@ -154,41 +173,6 @@ export class PipDetail implements AfterViewInit {
     this.dataSource.data = detail.requirements;
     // Default selection is "All" (null): the summary cards show global figures.
     this.dirty.set(false);
-  }
-
-  /** Synchronise JIRA statuses for all requirements of the PIP silently, then reload. */
-  private syncJira(): void {
-    if (this.syncInProgress) return;
-    this.syncInProgress = true;
-    this.service.syncJira(this.pipId).subscribe({
-      next: (result) => {
-        this.syncInProgress = false;
-        this.lastSyncedAt.set(new Date());
-        if (result.failed > 0) {
-          this.toast(`JIRA sync: ${result.failed} error(s) — ${result.errors.slice(0, 3).join(', ')}`);
-        }
-        this.load();
-      },
-      error: () => {
-        this.syncInProgress = false;
-        this.toast('JIRA synchronisation failed.');
-      }
-    });
-  }
-
-  /** Open a JIRA ticket URL in a new tab. */
-  protected openInJira(url: string | null): void {
-    if (url) {
-      window.open(url, '_blank', 'noopener');
-    }
-  }
-
-  /**
-   * Converts a JIRA status name to a CSS-safe class suffix.
-   * "In Progress" → "IN_PROGRESS", "To Do" → "TO_DO".
-   */
-  protected normalizeStatus(status: string | null): string {
-    return status ? status.toUpperCase().replace(/\s+/g, '_') : '';
   }
 
   protected markDirty(): void {
@@ -343,6 +327,17 @@ export class PipDetail implements AfterViewInit {
     this.snackBar.open(message, undefined, { duration: 3500 });
   }
 
+  protected openInJira(url: string | null): void {
+    if (url) {
+      window.open(url, '_blank');
+    }
+  }
+
+  /** Converts a Team Status string to a CSS slug for badge colouring. */
+  protected normalizeTeamStatus(status: string): string {
+    return status.toLowerCase().replace(/\s+/g, '-');
+  }
+
   protected saveLabel(): string {
     if (this.saving()) {
       return 'Saving…';
@@ -357,6 +352,7 @@ export class PipDetail implements AfterViewInit {
         id: row.id,
         tcmDescription: row.tcmDescription,
         description: row.description,
+        status: row.status,
         pmComment: row.pmComment,
         workloads: row.workloads,
         comments: row.comments

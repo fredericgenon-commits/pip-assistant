@@ -17,6 +17,10 @@ public record RequirementRowResponse(
         String pipStatus,
         Map<Long, String> workloads,
         Map<Long, String> comments,
+        /** team id -> true when the cell is owned by the JIRA sync (read-only in the UI) */
+        Map<Long, Boolean> jiraLocked,
+        /** team id -> JIRA-computed Team Status (null entries omitted) */
+        Map<Long, String> teamStatuses,
         String reqUrl,
         String tcmUrl) {
 
@@ -33,6 +37,8 @@ public record RequirementRowResponse(
                 row.pipStatus(),
                 row.workloads(),
                 row.comments(),
+                row.jiraLocked(),
+                row.teamStatuses(),
                 buildUrl(jiraBaseUrl, row.reqKey()),
                 buildUrl(jiraBaseUrl, row.tcmKey()));
     }
