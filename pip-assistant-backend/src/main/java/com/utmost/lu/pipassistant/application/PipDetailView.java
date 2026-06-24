@@ -1,6 +1,7 @@
 package com.utmost.lu.pipassistant.application;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -12,7 +13,11 @@ public record PipDetailView(
         Pip pip,
         List<Team> teams,
         List<RequirementRow> requirements,
-        Map<Long, BigDecimal> capacities) {
+        Map<Long, BigDecimal> capacities,
+        /** Metadata of the latest Excel import, or null if none has been made yet. */
+        LastImport lastImport) {
+
+    public record LastImport(int versionNo, String originalFilename, Instant importedAt) {}
 
     /** One requirement row, with workloads and dev comments keyed by team id. */
     public record RequirementRow(

@@ -138,3 +138,9 @@ next number. Keep this history up to date as part of finishing a task.
   interaction (threshold 60 s) + immediate on load. "Last synced: HH:mm" label in header.
   Team Status badge column (before Dev comment). Mock adapter (`@Profile("jira-mock")`) for
   local dev without a real JIRA server.
+- **Design update** (`feature/synchronize-backlog`): PIP Details screen updated from
+  Claude Design handoff. (1) 4th summary card "Capacity per team" with mini progress bars
+  per team (load/capacity, red when over). (2) "Last import" panel next to the drop zone
+  (version, filename, date) — backend: `ExcelImportRepository.findLastImportMeta()` added
+  and `PipDetailResponse` extended with `lastImport`. (3) Team selector label changed from
+  "Team" to "Team comment".

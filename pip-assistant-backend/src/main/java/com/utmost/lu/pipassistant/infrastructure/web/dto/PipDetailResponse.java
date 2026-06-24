@@ -11,15 +11,25 @@ public record PipDetailResponse(
         PipResponse pip,
         List<TeamResponse> teams,
         List<RequirementRowResponse> requirements,
-        Map<Long, BigDecimal> capacities) {
+        Map<Long, BigDecimal> capacities,
+        LastImportResponse lastImport) {
+
+    public record LastImportResponse(int versionNo, String originalFilename, String importedAt) {}
 
     public static PipDetailResponse from(PipDetailView view, String jiraBaseUrl) {
+        LastImportResponse li = view.lastImport() != null
+                ? new LastImportResponse(
+                        view.lastImport().versionNo(),
+                        view.lastImport().originalFilename(),
+                        view.lastImport().importedAt().toString())
+                : null;
         return new PipDetailResponse(
                 PipResponse.from(view.pip()),
                 view.teams().stream().map(TeamResponse::from).toList(),
                 view.requirements().stream()
                         .map(r -> RequirementRowResponse.from(r, jiraBaseUrl))
                         .toList(),
-                view.capacities());
+                view.capacities(),
+                li);
     }
 }

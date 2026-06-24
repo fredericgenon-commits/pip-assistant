@@ -17,6 +17,7 @@ import com.utmost.lu.pipassistant.domain.model.Project;
 import com.utmost.lu.pipassistant.domain.model.Requirement;
 import com.utmost.lu.pipassistant.domain.model.Team;
 import com.utmost.lu.pipassistant.domain.model.Workload;
+import com.utmost.lu.pipassistant.domain.port.ExcelImportRepository;
 import com.utmost.lu.pipassistant.domain.port.PipDetailRepository;
 import com.utmost.lu.pipassistant.domain.port.PipRepository;
 import com.utmost.lu.pipassistant.domain.port.RequirementBacklogRepository;
@@ -34,18 +35,21 @@ public class PipDetailService {
     private final TeamRepository teamRepository;
     private final RequirementStatusCatalog statusCatalog;
     private final RequirementBacklogRepository backlogRepository;
+    private final ExcelImportRepository importRepository;
 
     public PipDetailService(
             PipRepository pipRepository,
             PipDetailRepository detailRepository,
             TeamRepository teamRepository,
             RequirementStatusCatalog statusCatalog,
-            RequirementBacklogRepository backlogRepository) {
+            RequirementBacklogRepository backlogRepository,
+            ExcelImportRepository importRepository) {
         this.pipRepository = pipRepository;
         this.detailRepository = detailRepository;
         this.teamRepository = teamRepository;
         this.statusCatalog = statusCatalog;
         this.backlogRepository = backlogRepository;
+        this.importRepository = importRepository;
     }
 
     public List<String> requirementStatuses() {
@@ -114,7 +118,11 @@ public class PipDetailService {
         Map<Long, BigDecimal> capacities = detailRepository.findCapacitiesByPip(pipId).stream()
                 .collect(Collectors.toMap(PipCapacity::teamId, PipCapacity::capacity));
 
-        return new PipDetailView(pip, teams, rows, capacities);
+        PipDetailView.LastImport lastImport = importRepository.findLastImportMeta(pipId)
+                .map(m -> new PipDetailView.LastImport(m.versionNo(), m.originalFilename(), m.importedAt()))
+                .orElse(null);
+
+        return new PipDetailView(pip, teams, rows, capacities, lastImport);
     }
 
     @Transactional

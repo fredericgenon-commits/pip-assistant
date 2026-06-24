@@ -9,7 +9,7 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { PipDetailService } from './pip-detail.service';
-import { PipDetail as PipDetailData, PipInfo, RequirementRow, TeamRef } from './pip-detail.model';
+import { LastImport, PipDetail as PipDetailData, PipInfo, RequirementRow, TeamRef } from './pip-detail.model';
 
 // Order matches the design: the first 10 columns form the "Exigences" group.
 const TEXT_COLUMNS = [
@@ -70,6 +70,7 @@ export class PipDetail implements AfterViewInit {
   protected readonly saved = signal(false);
   protected readonly lastSyncedAt = signal<Date | null>(null);
   protected readonly syncFailed = signal(false);
+  protected readonly lastImport = signal<(Omit<LastImport, 'importedAt'> & { importedAt: Date }) | null>(null);
 
   private interactionThresholdMs = 60_000;
   private lastSyncTs = 0;
@@ -171,6 +172,9 @@ export class PipDetail implements AfterViewInit {
     this.teams.set(detail.teams);
     this.capacities.set(detail.capacities ?? {});
     this.dataSource.data = detail.requirements;
+    this.lastImport.set(detail.lastImport
+      ? { ...detail.lastImport, importedAt: new Date(detail.lastImport.importedAt) }
+      : null);
     // Default selection is "All" (null): the summary cards show global figures.
     this.dirty.set(false);
   }
@@ -268,6 +272,17 @@ export class PipDetail implements AfterViewInit {
   protected setCapacity(teamId: number, value: number | null): void {
     this.capacities.update((caps) => ({ ...caps, [teamId]: value }));
     this.markDirty();
+  }
+
+  protected teamCap(teamId: number): number {
+    return Number(this.capacities()[teamId]) || 0;
+  }
+
+  protected teamPct(teamId: number): string {
+    const cap = this.teamCap(teamId);
+    const load = this.total(teamId);
+    if (cap === 0) return load > 0 ? '100%' : '0%';
+    return Math.min(100, Math.round((load / cap) * 100)) + '%';
   }
 
   // ----- Excel import drop zone -----
