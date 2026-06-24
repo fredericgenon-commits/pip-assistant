@@ -62,10 +62,11 @@ pip:
       Document: Document
   requirement:
     # Allowed requirement statuses (configurable; restart to apply).
+    # Values must match what the JIRA sync writes (raw JIRA status names).
     statuses:
-      - TODO
-      - IN_PROGRESS
-      - DONE
+      - To Do
+      - In Progress
+      - Done
   import:
     # Excel layout for the PM planning file. Columns are matched by 0-based POSITION
     # (header labels in the file may differ, e.g. "REQ Title"). Matches the files
