@@ -19,12 +19,15 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.utmost.lu.pipassistant.application.ImportExcelService;
 import com.utmost.lu.pipassistant.application.InvalidExcelFileException;
+import com.utmost.lu.pipassistant.application.JiraSyncService;
+import com.utmost.lu.pipassistant.application.PipDetailService;
 import com.utmost.lu.pipassistant.application.PipDetailView;
 import com.utmost.lu.pipassistant.application.PipNotFoundException;
 import com.utmost.lu.pipassistant.domain.model.Pip;
 import com.utmost.lu.pipassistant.domain.model.PipCode;
 import com.utmost.lu.pipassistant.domain.model.PipStatus;
 import com.utmost.lu.pipassistant.domain.model.Team;
+import com.utmost.lu.pipassistant.infrastructure.config.JiraProperties;
 
 @WebMvcTest(PipImportController.class)
 class PipImportControllerTest {
@@ -34,6 +37,15 @@ class PipImportControllerTest {
 
     @MockitoBean
     private ImportExcelService importExcelService;
+
+    @MockitoBean
+    private JiraSyncService jiraSyncService;
+
+    @MockitoBean
+    private PipDetailService pipDetailService;
+
+    @MockitoBean
+    private JiraProperties jiraProperties;
 
     private static PipDetailView view() {
         Pip pip = new Pip(1L, PipCode.of("26_PIP_1"), null, null, PipStatus.PREPARATION);
@@ -49,7 +61,7 @@ class PipImportControllerTest {
 
     @Test
     void importReturnsRefreshedDetail() throws Exception {
-        given(importExcelService.importFile(eq(1L), any(), any())).willReturn(view());
+        given(pipDetailService.getDetail(1L)).willReturn(view());
 
         mockMvc.perform(multipart("/api/pips/1/imports").file(file()))
                 .andExpect(status().isOk())

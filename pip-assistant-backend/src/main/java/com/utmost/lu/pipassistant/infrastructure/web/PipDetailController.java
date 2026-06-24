@@ -1,6 +1,7 @@
 package com.utmost.lu.pipassistant.infrastructure.web;
 
 import java.net.URI;
+import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,6 +36,12 @@ public class PipDetailController {
     @GetMapping("/pips/{id}/detail")
     public PipDetailResponse getDetail(@PathVariable("id") Long id) {
         return PipDetailResponse.from(pipDetailService.getDetail(id), jiraProperties.getBaseUrl());
+    }
+
+    /** Configurable list of requirement statuses (fills the status cell select). */
+    @GetMapping("/requirement-statuses")
+    public List<String> requirementStatuses() {
+        return pipDetailService.requirementStatuses();
     }
 
     /** Bulk save of the PIP Details screen. */

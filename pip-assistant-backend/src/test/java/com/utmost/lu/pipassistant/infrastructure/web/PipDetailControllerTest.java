@@ -28,6 +28,7 @@ import com.utmost.lu.pipassistant.domain.model.Pip;
 import com.utmost.lu.pipassistant.domain.model.PipCode;
 import com.utmost.lu.pipassistant.domain.model.PipStatus;
 import com.utmost.lu.pipassistant.domain.model.Team;
+import com.utmost.lu.pipassistant.infrastructure.config.JiraProperties;
 
 @WebMvcTest(PipDetailController.class)
 class PipDetailControllerTest {
@@ -37,6 +38,9 @@ class PipDetailControllerTest {
 
     @MockitoBean
     private PipDetailService pipDetailService;
+
+    @MockitoBean
+    private JiraProperties jiraProperties;
 
     private static PipDetailView view() {
         Pip pip = new Pip(1L, PipCode.of("26_PIP_1"), null, null, PipStatus.PREPARATION);

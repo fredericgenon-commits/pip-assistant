@@ -27,9 +27,9 @@ public interface PipDetailRepository {
 
     void updateProjectDescription(Long projectId, String description);
 
-    void updateRequirement(Long requirementId, String description, String pmComment);
+    void updateRequirement(Long requirementId, String description, String status, String pmComment);
 
-    /** Persists the JIRA-sourced status for a single requirement. */
+    /** Updates only the status of a requirement (used by the JIRA sync). */
     void updateRequirementStatus(Long requirementId, String status);
 
     /**
@@ -50,9 +50,6 @@ public interface PipDetailRepository {
      * import may overwrite the cell again). Only acts when the cell is currently jira_locked.
      */
     void unlockWorkloadFromJira(Long requirementId, Long teamId);
-
-    /** Updates only the status of a requirement (used by the JIRA sync). */
-    void updateRequirementStatus(Long requirementId, String status);
 
     /** Insert or update a team's dev comment on a requirement. */
     void upsertDevComment(Long requirementId, Long teamId, String text);

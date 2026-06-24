@@ -20,9 +20,11 @@ public record RequirementRowResponse(
         /** team id -> true when the cell is owned by the JIRA sync (read-only in the UI) */
         Map<Long, Boolean> jiraLocked,
         /** team id -> JIRA-computed Team Status (null entries omitted) */
-        Map<Long, String> teamStatuses) {
+        Map<Long, String> teamStatuses,
+        String reqUrl,
+        String tcmUrl) {
 
-    public static RequirementRowResponse from(PipDetailView.RequirementRow row) {
+    public static RequirementRowResponse from(PipDetailView.RequirementRow row, String jiraBaseUrl) {
         return new RequirementRowResponse(
                 row.id(),
                 row.tcmKey(),
@@ -36,6 +38,15 @@ public record RequirementRowResponse(
                 row.workloads(),
                 row.comments(),
                 row.jiraLocked(),
-                row.teamStatuses());
+                row.teamStatuses(),
+                buildUrl(jiraBaseUrl, row.reqKey()),
+                buildUrl(jiraBaseUrl, row.tcmKey()));
+    }
+
+    private static String buildUrl(String baseUrl, String key) {
+        if (baseUrl == null || baseUrl.isBlank() || key == null) {
+            return null;
+        }
+        return baseUrl.stripTrailing() + "/browse/" + key;
     }
 }
