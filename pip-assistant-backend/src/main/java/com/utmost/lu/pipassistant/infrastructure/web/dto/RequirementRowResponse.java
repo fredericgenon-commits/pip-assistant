@@ -16,9 +16,11 @@ public record RequirementRowResponse(
         Integer priority,
         String pipStatus,
         Map<Long, String> workloads,
-        Map<Long, String> comments) {
+        Map<Long, String> comments,
+        String reqUrl,
+        String tcmUrl) {
 
-    public static RequirementRowResponse from(PipDetailView.RequirementRow row) {
+    public static RequirementRowResponse from(PipDetailView.RequirementRow row, String jiraBaseUrl) {
         return new RequirementRowResponse(
                 row.id(),
                 row.tcmKey(),
@@ -30,6 +32,15 @@ public record RequirementRowResponse(
                 row.priority(),
                 row.pipStatus(),
                 row.workloads(),
-                row.comments());
+                row.comments(),
+                buildUrl(jiraBaseUrl, row.reqKey()),
+                buildUrl(jiraBaseUrl, row.tcmKey()));
+    }
+
+    private static String buildUrl(String baseUrl, String key) {
+        if (baseUrl == null || baseUrl.isBlank() || key == null) {
+            return null;
+        }
+        return baseUrl.stripTrailing() + "/browse/" + key;
     }
 }

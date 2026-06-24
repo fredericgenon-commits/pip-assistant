@@ -191,22 +191,25 @@ which also seeds the 6 teams).
 
 - **Domain**: plain records + coarse ports `PipDetailRepository` (projects/requirements/
   workloads/dev-comments/capacities + upserts + interim `createRequirement`) and
-  `TeamRepository`. Allowed requirement statuses come from `RequirementStatusCatalog`
-  (application port) implemented by `RequirementStatusProperties`
-  (`@ConfigurationProperties("pip.requirement")`, see `application.yml`).
+  `TeamRepository`. `JiraPort` (interface) is the outbound port for JIRA status fetches.
 - **Application**: `PipDetailService.getDetail` assembles `PipDetailView` (rows carry
-  workloads + dev comments **per team**); `save` validates statuses then upserts; 404
-  (`PipNotFoundException`) / 400 (`InvalidRequirementStatusException`).
+  workloads + dev comments **per team**); `save` upserts; 404 (`PipNotFoundException`).
+  `JiraSyncService.sync` fetches each REQ's JIRA status and persists it, returning a
+  `JiraSyncResult { synced, failed, errors }`.
 - **Infrastructure**: per-table JPA entities + Spring Data repos composed by
-  `PipDetailRepositoryAdapter`; `PipDetailController` + DTOs; `PipDetailExceptionHandler`.
+  `PipDetailRepositoryAdapter`; `PipDetailController` + DTOs; `PipDetailExceptionHandler`
+  (covers `PipDetailController` and `JiraSyncController`). JIRA integration lives in
+  `infrastructure.jira`: `JiraClientAdapter` (real, profile `!jira-mock`) and
+  `MockJiraAdapter` (deterministic stub, profile `jira-mock`). `JiraProperties`
+  (`pip.jira.base-url`, `pip.jira.api-token`) holds JIRA connection settings.
 
 ### Endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/api/pips/{id}/detail` | Aggregated detail (pip, teams, requirement rows, capacities) |
-| PUT | `/api/pips/{id}/detail` | Bulk save (requirement edits + capacities) → 204 / 400 / 404 |
-| GET | `/api/requirement-statuses` | Configurable status list |
+| GET | `/api/pips/{id}/detail` | Aggregated detail (pip, teams, requirement rows with JIRA URLs, capacities) |
+| PUT | `/api/pips/{id}/detail` | Bulk save (requirement edits + capacities, no status) → 204 / 404 |
+| POST | `/api/pips/{id}/jira-sync` | Sync JIRA status for all REQs of the PIP → `{ synced, failed, errors }` |
 | POST | `/api/pips/{id}/requirements` | Interim create (tests / future import; not in UI) |
 
 ```mermaid

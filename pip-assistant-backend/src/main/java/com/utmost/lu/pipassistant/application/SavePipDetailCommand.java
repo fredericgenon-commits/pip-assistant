@@ -17,7 +17,6 @@ public record SavePipDetailCommand(
             Long id,
             String tcmDescription,
             String description,
-            String status,
             String pmComment,
             Map<Long, String> workloads,
             Map<Long, String> comments) {

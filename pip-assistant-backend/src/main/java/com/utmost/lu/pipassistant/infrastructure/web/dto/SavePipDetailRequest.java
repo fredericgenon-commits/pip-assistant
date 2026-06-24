@@ -17,7 +17,6 @@ public record SavePipDetailRequest(
             Long id,
             String tcmDescription,
             String description,
-            String status,
             String pmComment,
             Map<Long, String> workloads,
             Map<Long, String> comments) {
@@ -27,7 +26,7 @@ public record SavePipDetailRequest(
         List<SavePipDetailCommand.RequirementEdit> edits = requirements == null ? List.of()
                 : requirements.stream()
                         .map(r -> new SavePipDetailCommand.RequirementEdit(
-                                r.id(), r.tcmDescription(), r.description(), r.status(),
+                                r.id(), r.tcmDescription(), r.description(),
                                 r.pmComment(), r.workloads(), r.comments()))
                         .toList();
         return new SavePipDetailCommand(edits, capacities);

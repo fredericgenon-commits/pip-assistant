@@ -34,8 +34,10 @@ describe('PipDetailService', () => {
     req.flush(null);
   });
 
-  it('fetches requirement statuses', () => {
-    service.requirementStatuses().subscribe();
-    httpMock.expectOne('/api/requirement-statuses').flush(['TODO', 'DONE']);
+  it('syncs JIRA statuses via POST', () => {
+    service.syncJira(1).subscribe();
+    const req = httpMock.expectOne('/api/pips/1/jira-sync');
+    expect(req.request.method).toBe('POST');
+    req.flush({ synced: 3, failed: 0, errors: [] });
   });
 });

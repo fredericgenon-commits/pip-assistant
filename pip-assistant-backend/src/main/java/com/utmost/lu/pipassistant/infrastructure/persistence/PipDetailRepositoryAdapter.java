@@ -96,11 +96,18 @@ public class PipDetailRepositoryAdapter implements PipDetailRepository {
     }
 
     @Override
-    public void updateRequirement(Long requirementId, String description, String status, String pmComment) {
+    public void updateRequirement(Long requirementId, String description, String pmComment) {
         requirementRepository.findById(requirementId).ifPresent(e -> {
             e.setDescription(description);
-            e.setStatus(status);
             e.setPmComment(pmComment);
+            requirementRepository.save(e);
+        });
+    }
+
+    @Override
+    public void updateRequirementStatus(Long requirementId, String status) {
+        requirementRepository.findById(requirementId).ifPresent(e -> {
+            e.setStatus(status);
             requirementRepository.save(e);
         });
     }

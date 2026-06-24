@@ -21,31 +21,21 @@ import com.utmost.lu.pipassistant.domain.port.PipDetailRepository;
 import com.utmost.lu.pipassistant.domain.port.PipRepository;
 import com.utmost.lu.pipassistant.domain.port.TeamRepository;
 
-/**
- * Application service for the PIP Details screen: aggregated read, bulk save and the
- * configurable list of requirement statuses.
- */
+/** Application service for the PIP Details screen: aggregated read and bulk save. */
 @Service
 public class PipDetailService {
 
     private final PipRepository pipRepository;
     private final PipDetailRepository detailRepository;
     private final TeamRepository teamRepository;
-    private final RequirementStatusCatalog statusCatalog;
 
     public PipDetailService(
             PipRepository pipRepository,
             PipDetailRepository detailRepository,
-            TeamRepository teamRepository,
-            RequirementStatusCatalog statusCatalog) {
+            TeamRepository teamRepository) {
         this.pipRepository = pipRepository;
         this.detailRepository = detailRepository;
         this.teamRepository = teamRepository;
-        this.statusCatalog = statusCatalog;
-    }
-
-    public List<String> requirementStatuses() {
-        return statusCatalog.all();
     }
 
     @Transactional(readOnly = true)
@@ -84,8 +74,6 @@ public class PipDetailService {
                             workloadsByRequirement.getOrDefault(req.id(), Map.of()),
                             commentsByRequirement.getOrDefault(req.id(), Map.of()));
                 })
-                // Default order = priority ascending; requirements removed from the PIP
-                // (null priority) sink to the bottom, ordered by REQ key.
                 .sorted(Comparator
                         .comparing((PipDetailView.RequirementRow r) -> r.priority() == null)
                         .thenComparing(r -> r.priority() == null ? Integer.MAX_VALUE : r.priority())
@@ -102,14 +90,6 @@ public class PipDetailService {
     public void save(Long pipId, SavePipDetailCommand command) {
         Pip pip = pipRepository.findById(pipId).orElseThrow(() -> new PipNotFoundException(pipId));
 
-        // Validate statuses up front so nothing is persisted on a bad request.
-        List<String> allowed = statusCatalog.all();
-        for (SavePipDetailCommand.RequirementEdit edit : command.requirements()) {
-            if (edit.status() != null && !allowed.contains(edit.status())) {
-                throw new InvalidRequirementStatusException(edit.status(), allowed);
-            }
-        }
-
         // Restrict edits to requirements that actually belong to this PIP.
         Map<Long, Requirement> requirementsById = detailRepository.findRequirementsByPip(pipId).stream()
                 .collect(Collectors.toMap(Requirement::id, Function.identity()));
@@ -119,7 +99,7 @@ public class PipDetailService {
             if (existing == null) {
                 continue; // ignore unknown / foreign requirement ids
             }
-            detailRepository.updateRequirement(edit.id(), edit.description(), edit.status(), edit.pmComment());
+            detailRepository.updateRequirement(edit.id(), edit.description(), edit.pmComment());
             detailRepository.updateProjectDescription(existing.projectId(), edit.tcmDescription());
             normalize(edit.workloads()).forEach((teamId, cell) -> {
                 WorkloadCell parsed = parseWorkloadCell(cell);
@@ -187,10 +167,6 @@ public class PipDetailService {
             String status,
             String pmComment) {
         pipRepository.findById(pipId).orElseThrow(() -> new PipNotFoundException(pipId));
-        List<String> allowed = statusCatalog.all();
-        if (status != null && !allowed.contains(status)) {
-            throw new InvalidRequirementStatusException(status, allowed);
-        }
         return detailRepository.createRequirement(
                 pipId, tcmKey, tcmDescription, reqKey, description, status, pmComment);
     }

@@ -21,6 +21,10 @@ if (-not $Force) {
 $jdk = Find-Jdk21
 Write-Host "JAVA_HOME = $jdk"
 $env:JAVA_HOME = $jdk
+if (-not $env:SPRING_PROFILES_ACTIVE) {
+    $env:SPRING_PROFILES_ACTIVE = 'jira-mock'
+    Write-Host "SPRING_PROFILES_ACTIVE = jira-mock (default for local dev; set env var to override)"
+}
 
 Write-Host "Starting backend (mvnw spring-boot:run) ..."
 $beOut = Join-Path $LogDir 'backend.out'
