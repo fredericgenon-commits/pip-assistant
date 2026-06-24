@@ -27,7 +27,10 @@ public interface PipDetailRepository {
 
     void updateProjectDescription(Long projectId, String description);
 
-    void updateRequirement(Long requirementId, String description, String status, String pmComment);
+    void updateRequirement(Long requirementId, String description, String pmComment);
+
+    /** Persists the JIRA-sourced status for a single requirement. */
+    void updateRequirementStatus(Long requirementId, String status);
 
     /**
      * Insert or update a team's workload on a requirement. When {@code tbd} is true the cell

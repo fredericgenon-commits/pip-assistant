@@ -72,7 +72,8 @@ class PipDetailRepositoryAdapterTest {
         Requirement req = adapter.createRequirement(pipId, "TCM-2", "old tcm",
                 "REQ-2", "old req", "TODO", "pm");
 
-        adapter.updateRequirement(req.id(), "new req", "DONE", "pm2");
+        adapter.updateRequirement(req.id(), "new req", "pm2");
+        adapter.updateRequirementStatus(req.id(), "DONE");
         adapter.updateProjectDescription(req.projectId(), "new tcm");
 
         assertThat(adapter.findRequirementsByPip(pipId)).singleElement()

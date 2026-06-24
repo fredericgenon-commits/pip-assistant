@@ -107,6 +107,25 @@ plan evolves across the preparation week).
 Data **synced from external systems** (not edited in the app): `Ticket`, `Developer`,
 `Version`, `Release`.
 
+## JIRA status synchronisation
+
+The `status` of each `Requirement` is read from JIRA (field `status.name` of the REQ
+ticket) and persisted in the database. It is **not editable** in the application. Sync is
+triggered:
+
+1. **On page load** (PIP Detail screen): cached statuses are displayed immediately; the
+   sync runs in the background and refreshes the grid when complete.
+2. **On Excel import**: the backend syncs all REQs of the PIP after parsing the file, so
+   the response already contains up-to-date statuses.
+3. **On demand**: via the "Synchronize JIRA" button in the PIP Detail toolbar.
+
+Errors (JIRA unavailable, ticket not found) are reported per-REQ and shown as a transient
+toast (Snackbar). The last known status remains visible when JIRA is unreachable.
+
+**Deep links**: double-clicking a REQ or TCM key in the grid opens the corresponding JIRA
+ticket in a new tab. The JIRA base URL is configured server-side (`pip.jira.base-url`) and
+included in the API response (`reqUrl`, `tcmUrl` on each requirement row).
+
 ## JIRA ticket categories
 
 Categories correspond to "Projects" in JIRA and define the key prefix — every ticket

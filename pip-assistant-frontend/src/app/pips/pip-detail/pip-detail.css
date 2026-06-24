@@ -44,6 +44,11 @@
   font-size: 12.5px;
   color: var(--ink-muted);
 }
+.sync-label {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  align-self: center;
+}
 
 /* ---------- Summary cards ---------- */
 .summary {
@@ -343,25 +348,18 @@
   padding-left: 6px;
 }
 
-/* REQ status select styled as a badge */
+/* REQ JIRA status badge (read-only span, value from JIRA) */
 .req-badge {
-  appearance: none;
-  -webkit-appearance: none;
-  border: none;
+  display: inline-block;
   border-radius: var(--badge-radius);
   padding: 4px 9px;
   font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0.02em;
-  cursor: pointer;
   background: var(--surface-alt);
   color: var(--ink-muted);
 }
-.req-badge:disabled {
-  cursor: default;
-  opacity: 0.7;
-}
-.req-badge--TODO {
+.req-badge--TO_DO {
   background: var(--st-todo-bg);
   color: var(--st-todo-fg);
 }
@@ -369,9 +367,24 @@
   background: var(--st-prog-bg);
   color: var(--st-prog-fg);
 }
+.req-badge--IN_REVIEW {
+  background: var(--st-prog-bg);
+  color: var(--st-prog-fg);
+}
 .req-badge--DONE {
   background: var(--st-done-bg);
   color: var(--st-done-fg);
+}
+
+/* Clickable JIRA key cells */
+.jira-link {
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+}
+.jira-link:hover {
+  text-decoration-style: solid;
 }
 
 /* Footer rows */
