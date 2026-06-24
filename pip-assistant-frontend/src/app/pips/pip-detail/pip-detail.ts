@@ -69,6 +69,7 @@ export class PipDetail implements AfterViewInit {
   protected readonly saving = signal(false);
   protected readonly saved = signal(false);
   protected readonly lastSyncedAt = signal<Date | null>(null);
+  protected readonly syncFailed = signal(false);
 
   private interactionThresholdMs = 60_000;
   private lastSyncTs = 0;
@@ -126,6 +127,7 @@ export class PipDetail implements AfterViewInit {
     this.service.syncJira(this.pipId).subscribe({
       next: (result) => {
         this.syncInProgress = false;
+        this.syncFailed.set(false);
         this.lastSyncedAt.set(new Date());
         if (result.failed > 0) {
           this.toast(`JIRA sync: ${result.failed} error(s) — ${result.errors.slice(0, 3).join(', ')}`);
@@ -134,6 +136,7 @@ export class PipDetail implements AfterViewInit {
       },
       error: () => {
         this.syncInProgress = false;
+        this.syncFailed.set(true);
       }
     });
   }

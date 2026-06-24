@@ -49,6 +49,10 @@
   color: var(--ink-muted);
   align-self: center;
 }
+.sync-label--error {
+  color: var(--color-danger, #c0392b);
+  font-weight: 600;
+}
 
 /* ---------- Summary cards ---------- */
 .summary {
@@ -425,6 +429,10 @@
   font-size: 0.75rem;
   color: var(--ink-muted);
   align-self: center;
+}
+.sync-label--error {
+  color: var(--color-danger, #c0392b);
+  font-weight: 600;
 }
 
 /* ---------- Team Status badge ---------- */

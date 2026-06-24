@@ -24,7 +24,7 @@ public class JiraSyncController {
     }
 
     /** Trigger a JIRA sync for a PIP. Respects the backend TTL. */
-    @PostMapping("/pips/{pipId}/sync")
+    @PostMapping("/pips/{pipId}/jira-sync")
     public JiraSyncResult sync(@PathVariable Long pipId) {
         return syncService.sync(pipId);
     }

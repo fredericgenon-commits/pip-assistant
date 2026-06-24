@@ -21,7 +21,9 @@
         <option [ngValue]="team.id">{{ team.name }}</option>
       }
     </select>
-    @if (lastSyncedAt(); as t) {
+    @if (syncFailed()) {
+      <span class="sync-label sync-label--error">JIRA: connection error</span>
+    } @else if (lastSyncedAt(); as t) {
       <span class="sync-label">Last synced: {{ t | date:'HH:mm' }}</span>
     }
     <button type="button" class="btn btn--primary" [disabled]="!dirty() || saving()" (click)="save()">
