@@ -44,7 +44,7 @@
   </div>
   <div class="card summary-card">
     <span class="summary-card__label">Load / Capacity</span>
-    <span class="summary-card__value" [class.over]="loadOver()">
+    <span class="summary-card__value" [class.sufficient]="loadSufficient()">
       {{ totalLoad() }} <span class="summary-card__unit">/ {{ totalCap() }} SP</span>
     </span>
   </div>
@@ -55,12 +55,12 @@
         <div class="cap-bar">
           <div class="cap-bar__header">
             <span class="cap-bar__label">{{ teamShort(team.name) }}</span>
-            <span class="cap-bar__val" [class.over]="teamOver(team.id)">
+            <span class="cap-bar__val" [class.sufficient]="teamSufficient(team.id)">
               {{ total(team.id) }}/{{ teamCap(team.id) }}
             </span>
           </div>
-          <div class="cap-bar__track" [class.over]="teamOver(team.id)">
-            <div class="cap-bar__fill" [style.width]="teamPct(team.id)" [class.over]="teamOver(team.id)"></div>
+          <div class="cap-bar__track" [class.sufficient]="teamSufficient(team.id)">
+            <div class="cap-bar__fill" [style.width]="teamPct(team.id)" [class.sufficient]="teamSufficient(team.id)"></div>
           </div>
         </div>
       }
@@ -229,14 +229,14 @@
                  (ngModelChange)="row.workloads[team.id] = $event; markDirty()" />
         </td>
         <td mat-footer-cell *matFooterCellDef class="ta-center team-col mono total-cell"
-            [class.over]="teamOver(team.id)">{{ total(team.id) }}</td>
+            [class.sufficient]="teamSufficient(team.id)">{{ total(team.id) }}</td>
       </ng-container>
 
       <!-- Capacity footer cell for this team (second footer row) -->
       <ng-container [matColumnDef]="'capTeam_' + team.id">
         <td mat-footer-cell *matFooterCellDef class="ta-center team-col">
           <input class="cell-input num cap" type="number" step="0.5" [ngModel]="capacities()[team.id]"
-                 [class.over]="teamOver(team.id)"
+                 [class.sufficient]="teamSufficient(team.id)"
                  (ngModelChange)="setCapacity(team.id, $event)" />
         </td>
       </ng-container>

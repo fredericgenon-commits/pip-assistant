@@ -253,8 +253,10 @@ export class PipDetail implements AfterViewInit {
     return this.teams().reduce((sum, t) => sum + (Number(this.capacities()[t.id]) || 0), 0);
   }
 
-  protected loadOver(): boolean {
-    return this.totalLoad() > this.totalCap();
+  /** True when global backlog >= global capacity and capacity is set. */
+  protected loadSufficient(): boolean {
+    const cap = this.totalCap();
+    return cap > 0 && this.totalLoad() >= cap;
   }
 
   /** Live sum of a team's story points (TBD/empty count as 0); removed rows are excluded. */
@@ -265,8 +267,10 @@ export class PipDetail implements AfterViewInit {
     );
   }
 
-  protected teamOver(teamId: number): boolean {
-    return this.total(teamId) > (Number(this.capacities()[teamId]) || 0);
+  /** True when backlog >= capacity and capacity is set: the team is covered. */
+  protected teamSufficient(teamId: number): boolean {
+    const cap = Number(this.capacities()[teamId]) || 0;
+    return cap > 0 && this.total(teamId) >= cap;
   }
 
   protected setCapacity(teamId: number, value: number | null): void {
