@@ -324,6 +324,12 @@ export class PipDetail implements AfterViewInit {
     this.snackBar.open(message, undefined, { duration: 3500 });
   }
 
+  protected openInJira(url: string | null): void {
+    if (url) {
+      window.open(url, '_blank');
+    }
+  }
+
   /** Converts a Team Status string to a CSS slug for badge colouring. */
   protected normalizeTeamStatus(status: string): string {
     return status.toLowerCase().replace(/\s+/g, '-');

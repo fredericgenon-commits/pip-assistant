@@ -24,20 +24,16 @@ export class PipDetailService {
     return this.http.post<PipDetail>(`/api/pips/${pipId}/imports`, form);
   }
 
+  requirementStatuses(): Observable<string[]> {
+    return this.http.get<string[]>('/api/requirement-statuses');
+  }
+
   /** Trigger a JIRA status sync for all requirements of the PIP. */
   syncJira(pipId: number): Observable<JiraSyncResult> {
     return this.http.post<JiraSyncResult>(`/api/pips/${pipId}/jira-sync`, {});
   }
 
   /** Fetch JIRA sync configuration values from the backend. */
-  getSyncSettings(): Observable<JiraSyncSettings> {
-    return this.http.get<JiraSyncSettings>('/api/jira-sync-settings');
-  }
-
-  syncJira(pipId: number): Observable<JiraSyncResult> {
-    return this.http.post<JiraSyncResult>(`/api/pips/${pipId}/sync`, null);
-  }
-
   getSyncSettings(): Observable<JiraSyncSettings> {
     return this.http.get<JiraSyncSettings>('/api/jira-sync-settings');
   }
