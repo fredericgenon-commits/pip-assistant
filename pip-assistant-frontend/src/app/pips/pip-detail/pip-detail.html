@@ -9,7 +9,7 @@
     }
   </div>
   <div class="detail-actions">
-    <label class="team-label" for="team-select">Team</label>
+    <label class="team-label" for="team-select">Team comment</label>
     <select
       id="team-select"
       class="field"
@@ -44,9 +44,27 @@
   </div>
   <div class="card summary-card">
     <span class="summary-card__label">Load / Capacity</span>
-    <span class="summary-card__value" [class.over]="loadOver()">
+    <span class="summary-card__value" [class.sufficient]="loadSufficient()">
       {{ totalLoad() }} <span class="summary-card__unit">/ {{ totalCap() }} SP</span>
     </span>
+  </div>
+  <div class="card summary-card cap-bars-card">
+    <span class="summary-card__label">Capacity per team</span>
+    <div class="cap-bars">
+      @for (team of teams(); track team.id) {
+        <div class="cap-bar">
+          <div class="cap-bar__header">
+            <span class="cap-bar__label">{{ teamShort(team.name) }}</span>
+            <span class="cap-bar__val" [class.sufficient]="teamSufficient(team.id)">
+              {{ total(team.id) }}/{{ teamCap(team.id) }}
+            </span>
+          </div>
+          <div class="cap-bar__track" [class.sufficient]="teamSufficient(team.id)">
+            <div class="cap-bar__fill" [style.width]="teamPct(team.id)" [class.sufficient]="teamSufficient(team.id)"></div>
+          </div>
+        </div>
+      }
+    </div>
   </div>
 </div>
 
@@ -57,7 +75,7 @@
     <div class="dropzone__text">
       @if (droppedFile(); as f) {
         <div class="dropzone__title">Ready to import: <span class="mono">{{ f.name }}</span></div>
-        <div class="dropzone__hint">Click “Import this file” to start the import.</div>
+        <div class="dropzone__hint">Click "Import this file" to start the import.</div>
       } @else {
         <div class="dropzone__title">Drop the PM <span class="mono">.xlsx</span> file here</div>
         <div class="dropzone__hint">A new drop replaces the previous one. Excel format only.</div>
@@ -73,6 +91,16 @@
     </button>
     <input #fileInput type="file" accept=".xlsx" class="hidden" (change)="onFilePicked($event)" />
   </div>
+  @if (lastImport(); as li) {
+    <div class="card last-import">
+      <div class="last-import__header">
+        <span class="last-import__label">Last import</span>
+        <span class="last-import__badge">v{{ li.versionNo }}</span>
+      </div>
+      <div class="last-import__filename mono">{{ li.originalFilename }}</div>
+      <div class="last-import__date">{{ li.importedAt | date:'d MMM yyyy · HH:mm' }}</div>
+    </div>
+  }
 </div>
 
 <!-- Diff legend -->
@@ -201,14 +229,14 @@
                  (ngModelChange)="row.workloads[team.id] = $event; markDirty()" />
         </td>
         <td mat-footer-cell *matFooterCellDef class="ta-center team-col mono total-cell"
-            [class.over]="teamOver(team.id)">{{ total(team.id) }}</td>
+            [class.sufficient]="teamSufficient(team.id)">{{ total(team.id) }}</td>
       </ng-container>
 
       <!-- Capacity footer cell for this team (second footer row) -->
       <ng-container [matColumnDef]="'capTeam_' + team.id">
         <td mat-footer-cell *matFooterCellDef class="ta-center team-col">
           <input class="cell-input num cap" type="number" step="0.5" [ngModel]="capacities()[team.id]"
-                 [class.over]="teamOver(team.id)"
+                 [class.sufficient]="teamSufficient(team.id)"
                  (ngModelChange)="setCapacity(team.id, $event)" />
         </td>
       </ng-container>

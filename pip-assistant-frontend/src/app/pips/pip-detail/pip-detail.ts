@@ -9,7 +9,7 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { PipDetailService } from './pip-detail.service';
-import { PipDetail as PipDetailData, PipInfo, RequirementRow, TeamRef } from './pip-detail.model';
+import { LastImport, PipDetail as PipDetailData, PipInfo, RequirementRow, TeamRef } from './pip-detail.model';
 
 // Order matches the design: the first 10 columns form the "Exigences" group.
 const TEXT_COLUMNS = [
@@ -70,6 +70,7 @@ export class PipDetail implements AfterViewInit {
   protected readonly saved = signal(false);
   protected readonly lastSyncedAt = signal<Date | null>(null);
   protected readonly syncFailed = signal(false);
+  protected readonly lastImport = signal<(Omit<LastImport, 'importedAt'> & { importedAt: Date }) | null>(null);
 
   private interactionThresholdMs = 60_000;
   private lastSyncTs = 0;
@@ -171,6 +172,9 @@ export class PipDetail implements AfterViewInit {
     this.teams.set(detail.teams);
     this.capacities.set(detail.capacities ?? {});
     this.dataSource.data = detail.requirements;
+    this.lastImport.set(detail.lastImport
+      ? { ...detail.lastImport, importedAt: new Date(detail.lastImport.importedAt) }
+      : null);
     // Default selection is "All" (null): the summary cards show global figures.
     this.dirty.set(false);
   }
@@ -249,8 +253,10 @@ export class PipDetail implements AfterViewInit {
     return this.teams().reduce((sum, t) => sum + (Number(this.capacities()[t.id]) || 0), 0);
   }
 
-  protected loadOver(): boolean {
-    return this.totalLoad() > this.totalCap();
+  /** True when global backlog >= global capacity and capacity is set. */
+  protected loadSufficient(): boolean {
+    const cap = this.totalCap();
+    return cap > 0 && this.totalLoad() >= cap;
   }
 
   /** Live sum of a team's story points (TBD/empty count as 0); removed rows are excluded. */
@@ -261,13 +267,26 @@ export class PipDetail implements AfterViewInit {
     );
   }
 
-  protected teamOver(teamId: number): boolean {
-    return this.total(teamId) > (Number(this.capacities()[teamId]) || 0);
+  /** True when backlog >= capacity and capacity is set: the team is covered. */
+  protected teamSufficient(teamId: number): boolean {
+    const cap = Number(this.capacities()[teamId]) || 0;
+    return cap > 0 && this.total(teamId) >= cap;
   }
 
   protected setCapacity(teamId: number, value: number | null): void {
     this.capacities.update((caps) => ({ ...caps, [teamId]: value }));
     this.markDirty();
+  }
+
+  protected teamCap(teamId: number): number {
+    return Number(this.capacities()[teamId]) || 0;
+  }
+
+  protected teamPct(teamId: number): string {
+    const cap = this.teamCap(teamId);
+    const load = this.total(teamId);
+    if (cap === 0) return load > 0 ? '100%' : '0%';
+    return Math.min(100, Math.round((load / cap) * 100)) + '%';
   }
 
   // ----- Excel import drop zone -----

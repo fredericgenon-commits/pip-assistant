@@ -2,6 +2,7 @@ package com.utmost.lu.pipassistant.domain.port;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import com.utmost.lu.pipassistant.domain.model.ImportDiff;
 import com.utmost.lu.pipassistant.domain.model.SnapshotRequirement;
@@ -25,4 +26,9 @@ public interface ExcelImportRepository {
      * mark removed requirements as REMOVED_FROM_PIP.
      */
     void applyImport(Long pipId, int versionNo, String originalFilename, Instant importedAt, ImportDiff diff);
+
+    /** Metadata of the latest import for the PIP, or empty if no import has been made yet. */
+    Optional<ImportMeta> findLastImportMeta(Long pipId);
+
+    record ImportMeta(int versionNo, String originalFilename, Instant importedAt) {}
 }

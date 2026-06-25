@@ -27,6 +27,7 @@ import com.utmost.lu.pipassistant.domain.model.Project;
 import com.utmost.lu.pipassistant.domain.model.Requirement;
 import com.utmost.lu.pipassistant.domain.model.Team;
 import com.utmost.lu.pipassistant.domain.model.Workload;
+import com.utmost.lu.pipassistant.domain.port.ExcelImportRepository;
 import com.utmost.lu.pipassistant.domain.port.PipDetailRepository;
 import com.utmost.lu.pipassistant.domain.port.PipRepository;
 import com.utmost.lu.pipassistant.domain.port.RequirementBacklogRepository;
@@ -40,9 +41,11 @@ class PipDetailServiceTest {
     @Mock private TeamRepository teamRepository;
     @Mock private RequirementStatusCatalog statusCatalog;
     @Mock private RequirementBacklogRepository backlogRepository;
+    @Mock private ExcelImportRepository importRepository;
 
     private PipDetailService service() {
-        return new PipDetailService(pipRepository, detailRepository, teamRepository, statusCatalog, backlogRepository);
+        return new PipDetailService(pipRepository, detailRepository, teamRepository, statusCatalog,
+                backlogRepository, importRepository);
     }
 
     private static Pip pip(long id) {
@@ -64,6 +67,7 @@ class PipDetailServiceTest {
         when(detailRepository.findCapacitiesByPip(1L))
                 .thenReturn(List.of(new PipCapacity(1L, 10L, new BigDecimal("20"))));
         when(backlogRepository.findByPip(1L)).thenReturn(List.of());
+        when(importRepository.findLastImportMeta(1L)).thenReturn(Optional.empty());
 
         PipDetailView view = service().getDetail(1L);
 

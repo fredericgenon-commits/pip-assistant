@@ -41,12 +41,19 @@ export interface JiraSyncSettings {
   interactionThresholdSeconds: number;
 }
 
+export interface LastImport {
+  versionNo: number;
+  originalFilename: string;
+  importedAt: string;
+}
+
 export interface PipDetail {
   pip: PipInfo;
   teams: TeamRef[];
   requirements: RequirementRow[];
   /** team id -> capacity */
   capacities: Record<number, number | null>;
+  lastImport: LastImport | null;
 }
 
 export interface SavePipDetailPayload {

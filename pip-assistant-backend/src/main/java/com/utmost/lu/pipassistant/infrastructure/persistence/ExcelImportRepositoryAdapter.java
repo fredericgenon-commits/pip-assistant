@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -54,6 +55,13 @@ public class ExcelImportRepositoryAdapter implements ExcelImportRepository {
         return imports.findFirstByPipIdOrderByVersionNoDesc(pipId)
                 .map(e -> e.getVersionNo() + 1)
                 .orElse(1);
+    }
+
+    @Override
+    public Optional<ExcelImportRepository.ImportMeta> findLastImportMeta(Long pipId) {
+        return imports.findFirstByPipIdOrderByVersionNoDesc(pipId)
+                .map(e -> new ExcelImportRepository.ImportMeta(
+                        e.getVersionNo(), e.getOriginalFilename(), e.getImportedAt()));
     }
 
     @Override

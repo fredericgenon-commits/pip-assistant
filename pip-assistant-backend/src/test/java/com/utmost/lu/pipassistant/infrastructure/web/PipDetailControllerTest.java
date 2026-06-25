@@ -48,7 +48,7 @@ class PipDetailControllerTest {
                 "req desc", "TODO", "pm", 1, "NEW", Map.of(10L, "3"), Map.of(10L, "note"),
                 Map.of(), Map.of());
         return new PipDetailView(pip, List.of(new Team(10L, "Core")), List.of(row),
-                Map.of(10L, new BigDecimal("20")));
+                Map.of(10L, new BigDecimal("20")), null);
     }
 
     @Test

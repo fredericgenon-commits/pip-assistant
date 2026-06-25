@@ -222,6 +222,52 @@ Si non configuré, les champs `reqUrl`/`tcmUrl` seront null et ce test est N/A.
 
 ---
 
+## TC-13 — PIP Details : carte "Capacity per team"
+
+**URL :** `/pips/:id` (avec requirements et capacités)
+
+**Steps :**
+1. Naviguer vers un PIP Details qui a des requirements importés.
+2. Observer la zone des summary cards en haut de la page.
+
+**Expected :**
+- Une 4e carte "Capacity per team" est présente à droite des 3 premières.
+- La carte affiche une mini-barre de progression pour chaque équipe (Core, Portal, Process, Assets, API, Doc).
+- Chaque barre affiche `load/capacity` en chiffres à droite du nom de l'équipe.
+- Les barres où la charge dépasse la capacité sont affichées en rouge.
+- Les barres où la charge est dans la capacité sont en couleur primaire (terracotta).
+
+---
+
+## TC-14 — PIP Details : panneau "Last import"
+
+**URL :** `/pips/:id` (avec au moins un import Excel effectué)
+
+**Steps :**
+1. Naviguer vers un PIP Details qui a des requirements importés (ex : 26_PIP_2).
+2. Observer la zone de drop de fichier.
+
+**Expected :**
+- Un panneau "Last import" est visible à droite de la zone de drop.
+- Il affiche : le numéro de version (ex : "v4"), le nom du fichier, et la date d'import.
+- Un PIP sans import n'affiche pas ce panneau.
+
+---
+
+## TC-15 — PIP Details : label "Team comment" sur le sélecteur d'équipe
+
+**URL :** `/pips/:id`
+
+**Steps :**
+1. Naviguer vers un PIP Details.
+2. Observer le libellé à gauche du sélecteur d'équipe dans la barre d'outils.
+
+**Expected :**
+- Le libellé affiché est "Team comment" (et non "Team").
+- Le sélecteur est toujours fonctionnel : changer d'équipe met à jour la colonne "Dev comment".
+
+---
+
 ## Notes de maintenance
 
 - **Ajouter une feature** → ajouter un TC-XX à la suite.
