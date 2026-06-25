@@ -144,7 +144,7 @@
   transform-origin: left;
 }
 .cap-bar__fill.sufficient {
-  background: var(--color-success);
+  background: var(--success-bar);
 }
 
 /* ---------- Import zone ---------- */

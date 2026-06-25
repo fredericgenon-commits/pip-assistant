@@ -7,6 +7,10 @@ planning file with JIRA, GitLab and XLDeploy.
 > Status: **Phase 1 — scaffold / hello world**. Empty hexagonal structure with an
 > end-to-end `/api/health` round-trip. No business model or features yet.
 
+## Todo
+jira synch change wording
+vert plus clair
+
 ## Repository layout
 
 | Path | Description |
