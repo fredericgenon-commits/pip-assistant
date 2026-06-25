@@ -112,6 +112,13 @@
   <span class="legend__item"><span class="dot dot--changed"></span>Changed</span>
   <span class="legend__item"><span class="dot dot--removed"></span>Removed from PIP</span>
   <span class="legend__item"><span class="dot dot--missing"></span>Missing data</span>
+  @if (selectedTeamId() !== null) {
+    <label class="legend__filter" [class.legend__filter--on]="filterTeam()">
+      <input type="checkbox" class="legend__filter-input" [checked]="filterTeam()" (change)="filterTeam.set(!filterTeam())">
+      <span class="legend__filter-track"><span class="legend__filter-thumb"></span></span>
+      <span class="legend__filter-label">{{ selectedTeamName() }} only</span>
+    </label>
+  }
 </div>
 
 <div class="card grid-card">

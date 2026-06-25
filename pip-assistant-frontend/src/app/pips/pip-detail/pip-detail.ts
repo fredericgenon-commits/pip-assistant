@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, DestroyRef, HostListener, ViewChild, computed, inject, signal } from '@angular/core';
+import { AfterViewInit, Component, DestroyRef, HostListener, ViewChild, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DatePipe, NgClass } from '@angular/common';
@@ -70,6 +70,7 @@ export class PipDetail implements AfterViewInit {
   protected readonly saved = signal(false);
   protected readonly lastSyncedAt = signal<Date | null>(null);
   protected readonly syncFailed = signal(false);
+  protected readonly filterTeam = signal(false);
   protected readonly lastImport = signal<(Omit<LastImport, 'importedAt'> & { importedAt: Date }) | null>(null);
 
   private readonly nowTick = signal(Date.now());
@@ -125,6 +126,14 @@ export class PipDetail implements AfterViewInit {
     interval(10_000)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.nowTick.set(Date.now()));
+    effect(() => {
+      if (this.selectedTeamId() === null) this.filterTeam.set(false);
+    });
+    effect(() => {
+      const active = this.filterTeam();
+      const teamId = this.selectedTeamId();
+      this.dataSource.filter = (active && teamId != null) ? 'active' : '';
+    });
   }
 
   @HostListener('document:click')
@@ -176,6 +185,11 @@ export class PipDetail implements AfterViewInit {
       return (row as unknown as Record<string, string>)[columnId] ?? '';
     };
     this.dataSource.sort = this.sort;
+    this.dataSource.filterPredicate = (row) => {
+      if (!this.filterTeam()) return true;
+      const teamId = this.selectedTeamId();
+      return teamId == null || this.impactsTeam(row, teamId);
+    };
   }
 
   private load(): void {
