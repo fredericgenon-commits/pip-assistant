@@ -355,8 +355,9 @@ The app silently synchronises each REQ's JIRA backlog in the background:
 - **After user interaction** — any click or keystroke triggers a sync if more than 60
   seconds have elapsed since the last one (threshold configurable in `application.yml`).
 
-A **"Last synced: HH:mm"** label (next to the Save button) appears once the first
-sync completes.
+A **relative-time label** (next to the Save button) appears once the first sync
+completes: "synced just now" (< 10 s), "X sec ago" (< 60 s), or "X min ago" (up to
+10 min). The label refreshes every 10 seconds client-side.
 
 The backend guards against JIRA overload with a **10-minute TTL** per PIP: a second
 request within the window is silently ignored. The counters reset on server restart.
@@ -373,9 +374,24 @@ request within the window is silently ignored. The counters reset on server rest
 (REQ, team), the workload cell is overwritten (`jira_locked = true`). When the JIRA
 backlog drops to 0 the cell is unlocked and future Excel imports may overwrite it again.
 
+### Grid UX refinements
+
+- **Sticky column headers** — when the user scrolls down the page, the two header rows
+  ("Requirements / Load per team" and column names) remain fixed at the top of the
+  viewport; everything above the table scrolls out of view normally.
+- **Column labels** — the requirement-status column is labelled **REQ Status**; the
+  per-team comment column is labelled **Team comment** (suffixed with the selected team
+  name when one is active, e.g. "Team comment · Core").
+- **Capacity bar colour** — when a team's backlog is within capacity the bar fills with
+  a lighter green (`#52b788`) for better readability.
+- **Team-only filter toggle** — a pill on/off switch appears at the right end of the
+  diff-legend row whenever a specific team is selected. When activated, the grid shows
+  only the requirements that have a non-empty workload (value or TBD) for that team.
+  The toggle resets automatically when the selector returns to "All".
+
 ### Team scope & "TBD" workloads
 
-The **Team** selector (PIP detail) drives more than the Dev-comment column:
+The **Team comment** selector (PIP detail) drives more than the team-comment column:
 
 - **All** (default) — the three summary cards show global figures (all requirements, all
   distinct TCMs, total load / total capacity).

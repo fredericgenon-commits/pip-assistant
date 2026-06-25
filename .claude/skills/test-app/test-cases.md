@@ -18,7 +18,6 @@
 - Le header contient le logo "P" et le wordmark "PIP Assistant".
 - Les liens de navigation "PIPs", "Imports", "Teams", "Settings" sont visibles.
 - Un bouton toggle de thème est présent dans le header.
-- L'indicateur "Last synced" (heure JIRA) est visible dans le header.
 - La page redirige vers `/pips` ou affiche directement la liste des PIPs.
 
 ---
@@ -75,7 +74,7 @@
 - L'URL change vers `/pips/:id`.
 - La page "PIP Details" s'affiche avec le nom du PIP et son statut.
 - Un tableau de requirements est présent (peut être vide si aucun import Excel).
-- Le header "Last synced: HH:mm" est visible.
+- Après quelques secondes, un label relatif apparaît près du bouton Save : "synced just now", "X sec ago" ou "X min ago".
 
 ---
 
@@ -91,8 +90,9 @@
 
 **Expected :**
 - Le sélecteur affiche "All" par défaut.
-- Après changement, la colonne "Dev comment" affiche les commentaires de l'équipe Core.
-- La colonne "Team Status" apparaît avec un badge pour chaque requirement.
+- Après changement, la colonne "Team comment · Core" affiche les commentaires de l'équipe Core.
+- La colonne "Team status · Core" apparaît avec un badge pour chaque requirement.
+- Un toggle "Core only" apparaît à droite de la ligne de légende PIP STATUS (DIFF).
 
 ---
 
@@ -166,10 +166,10 @@
 4. Observer la colonne "Team Status".
 
 **Expected :**
-- La colonne "REQ status" affiche un statut JIRA (ex : "TODO", "IN_PROGRESS", "DONE")
+- La colonne "REQ Status" affiche un statut JIRA (ex : "TODO", "IN_PROGRESS", "DONE")
   ou un indicateur de chargement le temps de la sync.
-- L'indicateur "Last synced: HH:mm" est mis à jour après quelques secondes.
-- Quand une équipe est sélectionnée, la colonne "Team Status" affiche un badge
+- Un label relatif ("synced just now", "X sec ago" ou "X min ago") est mis à jour après quelques secondes.
+- Quand une équipe est sélectionnée, la colonne "Team status" affiche un badge
   par requirement (ex : "Ready", "Done", "TA todo", etc. ou "—" si pas de données).
 
 ---
@@ -264,7 +264,48 @@ Si non configuré, les champs `reqUrl`/`tcmUrl` seront null et ce test est N/A.
 
 **Expected :**
 - Le libellé affiché est "Team comment" (et non "Team").
-- Le sélecteur est toujours fonctionnel : changer d'équipe met à jour la colonne "Dev comment".
+- Le sélecteur est toujours fonctionnel : changer d'équipe met à jour la colonne "Team comment".
+
+---
+
+## TC-16 — PIP Details : en-têtes de colonnes sticky au scroll
+
+**URL :** `/pips/:id` (avec assez de requirements pour déborder la hauteur de l'écran)
+
+**Preconditions :** Le PIP a suffisamment de requirements pour que la page soit scrollable.
+
+**Steps :**
+1. Naviguer vers un PIP Details avec des requirements.
+2. Scroller vers le bas jusqu'à ce que les cartes summary et la zone d'import disparaissent.
+
+**Expected :**
+- Les deux lignes d'en-tête ("REQUIREMENTS / LOAD PER TEAM" et "PRIO / PIP STATUS / TCM / ...") restent visibles en haut de l'écran.
+- Le contenu du tableau (lignes de requirements) scrolle normalement en dessous.
+- Remonter en haut de la page fait réapparaître les cartes summary et la zone d'import.
+
+---
+
+## TC-17 — PIP Details : filtre "équipe only"
+
+**URL :** `/pips/:id` (avec requirements importés, dont certains n'impactent pas toutes les équipes)
+
+**Preconditions :** Le PIP a des requirements dont au moins un a une valeur (ou TBD) pour une équipe et un autre non.
+
+**Steps :**
+1. Naviguer vers un PIP Details avec des requirements.
+2. Vérifier que le toggle de filtre n'est pas visible avec "All" sélectionné.
+3. Sélectionner une équipe (ex : "Core") dans le sélecteur "Team comment".
+4. Observer l'apparition du toggle "Core only" à droite de la légende PIP STATUS (DIFF).
+5. Activer le toggle.
+6. Désactiver le toggle.
+7. Resélectionner "All" dans le sélecteur.
+
+**Expected :**
+- Avec "All" : le toggle n'est pas visible.
+- Avec "Core" sélectionné : le toggle "Core only" apparaît à droite de la légende.
+- Toggle ON : seuls les requirements avec une valeur ou TBD dans la colonne Core sont affichés.
+- Toggle OFF : tous les requirements sont à nouveau visibles.
+- Retour sur "All" : le toggle disparaît et le filtre est automatiquement désactivé.
 
 ---
 

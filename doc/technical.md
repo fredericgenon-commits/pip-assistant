@@ -443,6 +443,35 @@ sequenceDiagram
     F->>F: load() + lastSyncedAt.set(now)
 ```
 
+**Relative-time sync label (frontend)** — `lastSyncedAt` is a `signal<Date|null>`. A
+companion `nowTick` signal (updated every 10 s via `interval(10_000)`) drives a
+`syncAgo` computed that formats the elapsed time: < 10 s → "synced just now",
+< 60 s → "X sec ago", else → "X min ago". The HTML binds to `syncAgo()` instead of
+`lastSyncedAt() | date`.
+
+## Grid UX: sticky headers & team filter
+
+**Sticky column headers** — `*matHeaderRowDef="…; sticky: true"` is set on both header
+rows (group and columns). The `.grid-card` container uses `overflow: visible` so that no
+CSS scroll-context is created between the `<th>` elements and the window; `position:
+sticky` therefore resolves against the window scroll, keeping headers visible while the
+page scrolls.
+
+**Team-only filter toggle** — implemented via `MatTableDataSource.filterPredicate`:
+
+```typescript
+filterPredicate = (row) => {
+  if (!this.filterTeam()) return true;
+  const teamId = this.selectedTeamId();
+  return teamId == null || this.impactsTeam(row, teamId);
+};
+```
+
+Two `effect()`s in the constructor keep state consistent:
+- `selectedTeamId() === null` → `filterTeam.set(false)` (auto-reset on "All").
+- `filterTeam` or `selectedTeamId` changes → `dataSource.filter = active ? 'active' : ''`
+  (triggers Angular Material re-evaluation of `filterPredicate`).
+
 ## Workloads: "TBD" cells & team scoping
 
 A workload cell can hold a number, be empty, or be **`TBD`** (impacted but unestimated).

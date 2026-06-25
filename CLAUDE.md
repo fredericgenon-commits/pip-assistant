@@ -72,6 +72,9 @@ IntelliJ: open the repo root. Three shared run configs are provided —
   sorting, mapping a backend status name to a label/colour — are fine.)
 - **Docs**: update `doc/functional.md` and `doc/technical.md` after every change.
   Use **Mermaid** diagrams where they clarify a model, flow or architecture.
+- **Test cases**: update `.claude/skills/test-app/test-cases.md` after every change —
+  add a new TC-XX for new features, update the relevant existing TC for modifications.
+  This is mandatory before committing, not optional.
 - **Tests**: write JUnit tests (backend) / unit tests (frontend); run and verify the
   application after every change.
 - Use **Context7** to confirm exact versions and API syntax (Spring Boot 4, Spring
