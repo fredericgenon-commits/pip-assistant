@@ -72,6 +72,19 @@ export class PipDetail implements AfterViewInit {
   protected readonly syncFailed = signal(false);
   protected readonly lastImport = signal<(Omit<LastImport, 'importedAt'> & { importedAt: Date }) | null>(null);
 
+  private readonly nowTick = signal(Date.now());
+
+  protected readonly syncAgo = computed<string | null>(() => {
+    const at = this.lastSyncedAt();
+    if (!at) return null;
+    this.nowTick();
+    const secs = Math.round((Date.now() - at.getTime()) / 1000);
+    if (secs < 10) return 'synced just now';
+    if (secs < 60) return `${secs} sec ago`;
+    const mins = Math.round(secs / 60);
+    return mins === 1 ? '1 min ago' : `${mins} min ago`;
+  });
+
   private interactionThresholdMs = 60_000;
   private lastSyncTs = 0;
   private syncInProgress = false;
@@ -109,6 +122,9 @@ export class PipDetail implements AfterViewInit {
     interval(10 * 60 * 1000)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.syncJira());
+    interval(10_000)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.nowTick.set(Date.now()));
   }
 
   @HostListener('document:click')

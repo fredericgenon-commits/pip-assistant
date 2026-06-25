@@ -23,8 +23,8 @@
     </select>
     @if (syncFailed()) {
       <span class="sync-label sync-label--error">JIRA: connection error</span>
-    } @else if (lastSyncedAt(); as t) {
-      <span class="sync-label">Last synced: {{ t | date:'HH:mm' }}</span>
+    } @else if (syncAgo(); as label) {
+      <span class="sync-label">{{ label }}</span>
     }
     <button type="button" class="btn btn--primary" [disabled]="!dirty() || saving()" (click)="save()">
       {{ saveLabel() }}
