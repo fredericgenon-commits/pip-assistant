@@ -31,6 +31,14 @@ export interface RequirementRow {
   teamStatuses: Record<number, string>;
 }
 
+export interface RequirementBacklogPatch {
+  requirementId: number;
+  status: string;
+  teamStatuses: Record<number, string>;
+  jiraLocked: Record<number, boolean>;
+  workloads: Record<number, string>;
+}
+
 export interface JiraSyncResult {
   synced: number;
   failed: number;

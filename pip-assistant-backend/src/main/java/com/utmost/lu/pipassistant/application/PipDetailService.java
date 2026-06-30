@@ -125,6 +125,38 @@ public class PipDetailService {
         return new PipDetailView(pip, teams, rows, capacities, lastImport);
     }
 
+    @Transactional(readOnly = true)
+    public List<BacklogPatch> getBacklog(Long pipId) {
+        List<Workload> allWorkloads = detailRepository.findWorkloadsByPip(pipId);
+
+        Map<Long, Map<Long, Boolean>> jiraLockedByReq = allWorkloads.stream()
+                .filter(Workload::jiraLocked)
+                .collect(Collectors.groupingBy(Workload::requirementId,
+                        Collectors.toMap(Workload::teamId, w -> Boolean.TRUE)));
+
+        Map<Long, Map<Long, String>> jiraWorkloadsByReq = allWorkloads.stream()
+                .filter(Workload::jiraLocked)
+                .collect(Collectors.groupingBy(Workload::requirementId,
+                        Collectors.toMap(Workload::teamId, PipDetailService::cellText)));
+
+        Map<Long, Map<Long, String>> teamStatusesByReq = backlogRepository.findByPip(pipId).stream()
+                .filter(e -> e.teamStatus() != null)
+                .collect(Collectors.groupingBy(
+                        RequirementBacklogRepository.TeamBacklogEntry::requirementId,
+                        Collectors.toMap(
+                                RequirementBacklogRepository.TeamBacklogEntry::teamId,
+                                RequirementBacklogRepository.TeamBacklogEntry::teamStatus)));
+
+        return detailRepository.findRequirementsByPip(pipId).stream()
+                .map(req -> new BacklogPatch(
+                        req.id(),
+                        req.status(),
+                        teamStatusesByReq.getOrDefault(req.id(), Map.of()),
+                        jiraLockedByReq.getOrDefault(req.id(), Map.of()),
+                        jiraWorkloadsByReq.getOrDefault(req.id(), Map.of())))
+                .toList();
+    }
+
     @Transactional
     public void save(Long pipId, SavePipDetailCommand command) {
         Pip pip = pipRepository.findById(pipId).orElseThrow(() -> new PipNotFoundException(pipId));

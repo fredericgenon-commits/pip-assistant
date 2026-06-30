@@ -9,7 +9,7 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { PipDetailService } from './pip-detail.service';
-import { LastImport, PipDetail as PipDetailData, PipInfo, RequirementRow, TeamRef } from './pip-detail.model';
+import { LastImport, PipDetail as PipDetailData, PipInfo, RequirementBacklogPatch, RequirementRow, TeamRef } from './pip-detail.model';
 
 // Order matches the design: the first 10 columns form the "Exigences" group.
 const TEXT_COLUMNS = [
@@ -158,13 +158,35 @@ export class PipDetail implements AfterViewInit {
         if (result.failed > 0) {
           this.toast(`JIRA sync: ${result.failed} error(s) — ${result.errors.slice(0, 3).join(', ')}`);
         }
-        this.load();
+        this.service.getBacklog(this.pipId).subscribe((patches) => this.applyBacklogPatch(patches));
       },
       error: () => {
         this.syncInProgress = false;
         this.syncFailed.set(true);
       }
     });
+  }
+
+  /**
+   * Patches JIRA-derived fields (status, teamStatuses, jiraLocked, locked workloads) in place
+   * on the existing row objects. Angular Material re-evaluates bindings without destroying the
+   * <tr> elements, so scroll position, focus and unsaved edits in unlocked cells are preserved.
+   */
+  private applyBacklogPatch(patches: RequirementBacklogPatch[]): void {
+    const byId = new Map(patches.map((p) => [p.requirementId, p]));
+    for (const row of this.dataSource.data) {
+      const patch = byId.get(row.id);
+      if (!patch) continue;
+      row.status = patch.status;
+      row.teamStatuses = { ...patch.teamStatuses };
+      row.jiraLocked = { ...patch.jiraLocked };
+      for (const [teamId, val] of Object.entries(patch.workloads)) {
+        row.workloads[Number(teamId)] = val;
+      }
+    }
+    // Reassigning the same reference notifies MatTableDataSource to re-render bindings
+    // without structural changes, so no <tr> is destroyed (scroll and focus stay intact).
+    this.dataSource.data = this.dataSource.data;
   }
 
   ngAfterViewInit(): void {

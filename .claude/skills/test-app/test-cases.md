@@ -309,6 +309,29 @@ Si non configuré, les champs `reqUrl`/`tcmUrl` seront null et ce test est N/A.
 
 ---
 
+## TC-18 — PIP Details : sync JIRA non-disruptive (scroll, focus, édits préservés)
+
+**URL :** `/pips/:id` (avec requirements importés, profil `jira-mock`)
+
+**Preconditions :** Le PIP a des requirements avec des workloads.
+
+**Steps :**
+1. Naviguer vers un PIP Details avec des requirements.
+2. Scroller vers le bas de la table (quelques lignes visibles).
+3. Cliquer sur une cellule de workload non-locked et modifier sa valeur (ne pas sauvegarder).
+4. Déclencher manuellement une sync en attendant 60 s d'inactivité puis en cliquant ailleurs
+   sur la page (ou attendre le cycle périodique de 10 min).
+5. Observer le comportement de la page pendant et après la sync.
+
+**Expected :**
+- La position de scroll reste inchangée après la sync.
+- Le focus et la valeur en cours d'édition dans la cellule sont préservés.
+- Le label "Last synced" se met à jour ("synced just now").
+- Les badges Team Status et les cellules jira-locked se rafraîchissent sans rechargement complet.
+- Aucun re-render complet de la table (pas de flash, pas de remontée vers le haut).
+
+---
+
 ## Notes de maintenance
 
 - **Ajouter une feature** → ajouter un TC-XX à la suite.

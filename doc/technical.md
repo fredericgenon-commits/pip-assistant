@@ -210,6 +210,7 @@ which also seeds the 6 teams).
 | GET | `/api/pips/{id}/detail` | Aggregated detail (pip, teams, requirement rows with JIRA URLs, capacities) |
 | PUT | `/api/pips/{id}/detail` | Bulk save (requirement edits + capacities, no status) → 204 / 404 |
 | POST | `/api/pips/{id}/jira-sync` | Sync JIRA status for all REQs of the PIP → `{ synced, failed, errors }` |
+| GET | `/api/pips/{id}/backlog` | JIRA-derived fields only (status, teamStatuses, jiraLocked, locked workloads) — used for non-disruptive in-place patch after sync |
 | POST | `/api/pips/{id}/requirements` | Interim create (tests / future import; not in UI) |
 
 ```mermaid
@@ -412,25 +413,34 @@ CREATE TABLE requirement_backlog (
 `interactionThresholdMs` elapsed since last sync. Handlers must be `protected` (Angular
 compiler requirement).
 
-After a successful sync: `load()` to refresh data + `lastSyncedAt.set(new Date())`.
+After a successful sync: calls `GET /api/pips/{id}/backlog` and patches JIRA-derived
+fields in place on existing row objects (no full reload). `lastSyncedAt.set(new Date())`.
 Partial failures (failed > 0) surface as a transient toast; the grid still refreshes.
+
+**Non-disruptive patch** — `applyBacklogPatch()` mutates `status`, `teamStatuses`,
+`jiraLocked`, and locked `workloads` directly on the existing `RequirementRow` objects,
+then reassigns `dataSource.data = dataSource.data` to notify Angular Material. Because
+the array length and object identities are unchanged, no `<tr>` is destroyed: scroll
+position, focused element and unsaved edits in non-locked cells are preserved.
 
 ### Endpoints (JIRA sync)
 
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/api/pips/{id}/sync` | Trigger a JIRA sync for this PIP → `JiraSyncResult` |
+| POST | `/api/pips/{id}/jira-sync` | Trigger a JIRA sync for this PIP → `JiraSyncResult` |
+| GET | `/api/pips/{id}/backlog` | JIRA-derived fields per REQ for in-place frontend patch |
 | GET | `/api/jira-sync-settings` | Frontend interaction-threshold config |
 
 ```mermaid
 sequenceDiagram
     participant F as Frontend (PipDetail)
     participant C as JiraSyncController
+    participant DC as PipDetailController
     participant S as JiraSyncService
     participant J as JiraBacklogPort
     participant D as DB
 
-    F->>C: POST /api/pips/{id}/sync
+    F->>C: POST /api/pips/{id}/jira-sync
     C->>S: sync(pipId)
     loop per requirement
         S->>J: fetchStatus(reqKey) + fetchDevTickets(reqKey)
@@ -440,7 +450,9 @@ sequenceDiagram
     end
     S-->>C: JiraSyncResult(synced, failed, errors)
     C-->>F: 200 JiraSyncResult
-    F->>F: load() + lastSyncedAt.set(now)
+    F->>DC: GET /api/pips/{id}/backlog
+    DC-->>F: List<BacklogPatch> (status, teamStatuses, jiraLocked, workloads)
+    F->>F: applyBacklogPatch() — mutate rows in place, no scroll/focus reset
 ```
 
 **Relative-time sync label (frontend)** — `lastSyncedAt` is a `signal<Date|null>`. A

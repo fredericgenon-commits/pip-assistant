@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.utmost.lu.pipassistant.application.BacklogPatch;
 import com.utmost.lu.pipassistant.application.PipDetailService;
 import com.utmost.lu.pipassistant.domain.model.Requirement;
 import com.utmost.lu.pipassistant.infrastructure.config.JiraProperties;
@@ -36,6 +37,12 @@ public class PipDetailController {
     @GetMapping("/pips/{id}/detail")
     public PipDetailResponse getDetail(@PathVariable("id") Long id) {
         return PipDetailResponse.from(pipDetailService.getDetail(id), jiraProperties.getBaseUrl());
+    }
+
+    /** JIRA-derived fields only, used by the frontend to patch the table in place after a sync. */
+    @GetMapping("/pips/{id}/backlog")
+    public List<BacklogPatch> getBacklog(@PathVariable("id") Long id) {
+        return pipDetailService.getBacklog(id);
     }
 
     /** Configurable list of requirement statuses (fills the status cell select). */
